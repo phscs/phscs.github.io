@@ -1,3 +1,10 @@
+"""
+TODO:
+	-put crawler on background thread to prevent blocking
+	-add crawl argument to force the crawler to stay on seed domain
+	-defensive programming in all user-facing functions (try / except)
+"""
+
 import cherrypy as cp
 import search as se
 
@@ -25,7 +32,7 @@ class SearchEngine(object):
 					<input type='submit' value='Search'/>\
 				</form>"
 		response += "<p>Results for: <i>" + query + "</i></p>"
-		if index_results != None:		
+		if index_results != None:
 			response += "<ul>"
 			for entry in index_results:
 				response += "<li><a href='" + entry[0] + "'>" + entry[0] + "</a></li>"

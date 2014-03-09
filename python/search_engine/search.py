@@ -1,10 +1,17 @@
+"""
+TODO:
+	-define query function
+		-must defensively return index results
+		-must rank results or call a ranking function
+"""
+
 import urllib
 import string
-from sys import getsizeof
 
 index = {}
 popularity_index = {}
 
+# PART 1
 def get_links(source):
 	links = []
 	link_temp = ""
@@ -24,6 +31,7 @@ def get_links(source):
 
 	return links
 
+# PART 2
 def get_keywords(source):
 	collecting_characters = False
 	collected_characters = ""
@@ -52,6 +60,7 @@ def get_keywords(source):
 
 	return keywords
 
+# PART 3
 def add_to_index(url, keywords):
 	for keyword in keywords:
 		if keyword not in index:
@@ -67,6 +76,7 @@ def add_to_index(url, keywords):
 			if not url_already_in_entry:
 				index[keyword].append([url, 0])
 
+# PART 4
 def crawl(seed_page_url):
 		urls_to_crawl = [seed_page_url]
 		urls_already_crawled = []
@@ -92,14 +102,22 @@ def crawl(seed_page_url):
 			urls_already_crawled.append(url)
 			crawls += 1
 
+# PART 5
 def uprank_popularity(url):
 	if url in popularity_index:
 		popularity_index[url] += 1
 	else:
 		popularity_index[url] = 1
-		
+
 def uprank_relevance(keyword, url):
 	if keyword in index:
 		for entry in index[keyword]:
 			if url == entry[0]:
 				entry[1] += 1
+
+# PART 6
+def query(keyword):
+	pass
+
+def rank_results(results):
+	pass
