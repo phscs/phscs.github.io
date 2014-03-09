@@ -1,0 +1,173 @@
+<html>
+<head>
+	<meta charset="UTF-8">
+	<link rel="stylesheet" type="text/css" href="style.css" />
+	<script src="jquery.js"></script>
+	<script src="markdown.js"></script>
+	<script src="syntax.js"></script>
+</head>
+<body>
+	<h1>Search Engine: Part 3</h1>
+
+	Here's the status of our search engine so far.
+
+	<ul>
+		<li><b>crawl</b> the web, which will involve:</li>
+		<ul style="list-style:circle">
+			<li class="completed">receiving a seed page's URL</li>
+			<li class="completed">downloading the contents (or _source code_) of the seed page</li>
+			<li class="completed">getting links out of the seed page's source code</li>
+			<li class="completed">getting keywords out of the seed page's source code</li>
+			<li>associating the keywords with the seed page's URL and storing those associations in an index</li>
+			<li>following all of the links from the seed page, and performing the above steps on them</li>
+		</ul>
+		<li><b>rank</b> results as people click on them or as more pages link to them and then sort the index so that it returns the most highly-ranked results first</li>
+		<li><b>return results</b> when someone searches for a keyword</li>
+	</ul>
+
+	Today's lesson will deal with the process of associating keywords and URLs in our engine's index. Our intent is that, when a user queries our index, the engine will return an array of links, preferably sorted by rank. The rank sorting process will come much later (in fact, we probably won't even cover it in this lesson). For now, we'll focus on building an appropriate ~data structure~. A data structure is basically the template into which we'll fit our data. It's important to think about the data structure _before_ writing lots of code, because if you change your data structure after writing lots of code, then you'll usually have to go back and change all of that code, which is time-consuming and bug-prone.
+
+	Another consideration is that, in a real-world situation, our index would probably contain millions of entries, so we need to make sure that our querying process is _efficient_. Picking the right data structure will have a big impact on how efficiently our engine performs.
+
+	Here's a starting idea for a data structure: maybe we could just throw all of our keywords and URLs into one big array. More specifically, and in technical terms, our index could be an array, each element of which is also an array, the first element of which is the keyword, and the subsequent elements of which are arrays containing just two elements: a URL and a rank. Here's an example of this data structure. (NOTE: The fact that the example below is alphabetized is purely accidental; Python doesn't automatically alphabetize anything, so we'd have to write code to force it to be alphabetized, if that's what we wanted.)
+
+	<span class="python">
+	|
+	index = [
+				["apple",   [URL, rank], [URL, rank], [URL, rank], ...],
+				["axis",    [URL, rank], [URL, rank], [URL, rank], ...],
+				["banana",  [URL, rank], [URL, rank], [URL, rank], ...],
+				["banquet", [URL, rank], [URL, rank], [URL, rank], ...],
+				... # etc.
+			]
+	|
+	</span>
+
+	Now, on the surface, this data structure might not seem so bad. But one thing to consider for every program is its ~worst-case scenario~; in other words, we need to consider what kind of input could cause the program to run for the maximum amount of time possible. Imagine, for instance, that I queried the index for the keyword "apple". The engine would grab the index and begin to look at each element in it. Luckily, "apple" is the very first keyword in the index, so the engine would grab its associated URLs and return them immediately. But imagine that the index was alphabetized and that it contained a million entries and that I queried for the keyword "zebra". The engine would grab the index and begin to look at each element in it. Unfortunately for us, "zebra" is near the end of the array, so our engine will have to examine nearly a million entries before it could find our keyword. It's bad for our users that some of their queries return quickly (like "apple") and others return slowly (like "zebra"). Or imagine that we searched for a keyword that wasn't in our index at all. Then our engine would have to examine all one million entries in the index before it could decide that the index didn't contain the keyword! This would be the absolute worst-case scenario. Querying for a word that wasn't in the index would take roughly _a million times longer_ than querying for "apple"!!!
+
+	So, perhaps the "one big array" approach isn't the best idea. What else could we try? Well, we could make an array of twenty-six "buckets" -- where each "bucket" represents a letter of the alphabet -- and then we could put all of our keywords in "buckets" based on their first letter. Here's an example.
+
+	<span class="python">
+	|
+	index = [
+				### here's the first bucket
+				### for keywords starting with "a"
+				[
+					["apple",   [URL, rank], [URL, rank], [URL, rank], ...],
+					["axis",    [URL, rank], [URL, rank], [URL, rank], ...],
+					... # etc.
+				],
+
+				### here's the second bucket
+				### for keywords starting with "b"
+				[
+					["banana",  [URL, rank], [URL, rank], [URL, rank], ...],
+					["banquet", [URL, rank], [URL, rank], [URL, rank], ...],
+					... # etc.
+				],
+
+				### etc.
+			]
+	|
+	</span>
+
+	When we query the database, we pass in a keyword, get the first letter of the keyword, find the appropriate bucket, and then search through the keywords in the bucket to find our keyword. Now, this is a vast improvement over our previous index. If we search for a keyword starting with an "a", then our index will go straight to the appropriate bucket and pull out the results. Similarly, if we search for a keyword starting with a "z", then our index will still go straight to the appropriate bucket and pull out the results. If this index had a million entries in it, then the engine would only have to search through (on average, and in a worst-case scenario) 38,500 entries for each bucket, rather than having to potentially trawl through all one million entries, as in our previous index. In short, we've greatly improved our index by reducing the time that it would take to query the index in a worst-case scenario.
+
+	But there's still room for improvement. I said that each bucket would have, on average, 38,500 entries in it. But in the real world, that isn't realistic. The "t" bucket would have _far_ more entries than the "j" bucket, since there are many, many more words that begin with "t" than with "j" (in English, at least). I did a quick analysis of Mark Twain's _The Adventures of Huckleberry Finn_, and less than 1% of words begin with the letter "j", while around 16% of words begin with the letter "t". In an index of a million entries, then, there would be roughly 9,000 keywords in the "j" bucket and roughly 160,000 keywords in the "t" bucket. Therefore, a "t" keyword query would take about _eighteen times as long_ as a "j" keyword query.
+
+	So, once again, our users have the problem that some of their queries are answered more quickly than some others. In an ideal world, we'd like for all queries to take approximately the same amount of time so that our users can expect consistent results from our engine. So how can we improve the index further?
+
+	In fact, computer scientists are always looking for better answers to this question. But they've come up with one clever answer that has stuck around for a while. Here's how it works. First, the programmer decides how many "buckets" the index should have. For now, we'll say 20. Then, when the engine's crawler gathers a keyword, it takes every letter of the keyword and assigns a number value to it. In other words, "a" = 1, "b" = 2, "c" = 3, etc. Then, it uses the sum of all of those numbers to determine which bucket to put the keyword in. For instance, the keyword "bee" would be translated to the numbers 2, 5, and 5, which add up to 12. Therefore, "bee" and its relevant URLs would be stored in the 12th bucket in the index. For another instance, the keyword "apple" would be translated to the numbers, 1, 16, 16, 12, and 5, which add up to 50. Since there's no 50th bucket, then we "wrap" back around to the beginning, taking away 20 and leaving 30. Since there's no 30th bucket, we wrap back around again and take away 20, leaving us with 10. Since there's a 10th bucket, then "apple" and its relevant URLs would be stored in the 10th bucket.
+
+	This kind of math -- where we "wrap" around at the end -- is called ~modular arithmetic~, and you use it all the time, even if you don't know it yet. It's used in clocks, for instance. If the current time is 1:00 and I ask you what time it will be in 90 minutes, you don't say, "1:90." Instead, you "wrap" around after passing the 60-minute mark and subtract 60, which leaves you with 30. Then you say, "2:30."
+
+	Also, the process of translating keywords into numbers (or, more broadly, of translating data of any arbitrary length to data of a fixed length) is called ~hashing~. One-way hashing is a powerful security tool that is often used to store passwords in databases so that they can't be deciphered if someone hijacks the database. When someone first creates an account on a website and enters a password, that password is hashed (usually turned into a long string of characters) and stored in a database with the username. It's important to note that the password is never unhashed by the database. To log on, the user enters his username and password into a login form and submits it. Then, the server takes the password from the login form and hashes it, and compares the newly-hashed password from the login form with the one in the database. If they match, then the user is allowed to log in. The hashing algorithm makes it virtually impossible for someone to guess a password if they don't know it already, and yet it's efficient enough that users can log in very quickly.
+
+	Anyway, Python has some built-in functions called `ord()` and `chr()` that would allow us to write such an algorithm (`ord()` changes a character into a number, and `chr()` changes a number back into a character), but in the interest of time, I'm going to skip over that for now. In fact, we're really in luck because Python has a hashing function built right into its ~dictionaries~! When we create a dictionary, Python (in the background, unseen by us) determines the appropriate number of buckets for our data, hashes the keys, and then stores them in the appropriate bucket with their values. Neato!
+
+	Reworking our index as a dictionary will not only be easier, but it'll allow our seach engine to return query results in a consistent manner (i.e., queries will take the same length of time regardless of starting letter of the keyword). Here's what it could look like in code.
+
+	<span class="python">
+	|
+	index = {
+				"apple":   [[URL, rank], [URL, rank], [URL, rank], ...],
+				"axis":    [[URL, rank], [URL, rank], [URL, rank], ...],
+				"banana":  [[URL, rank], [URL, rank], [URL, rank], ...],
+				"banquet": [[URL, rank], [URL, rank], [URL, rank], ...],
+				... # etc.
+			}
+	|
+	</span>
+
+	We won't be able to prove that this index is much more efficient than our previous two index attempts until we have a huge index to query -- so, for now, we'll have to trust that this method is better. (I did lots of tests on this, and although it would take me a long time to show you the code that I wrote for the tests, I did in fact make an index of a million entries and query it both for something that I knew was in the index and for something that I knew wasn't in the index. Both queries returned in virtually the same amount of time (within a few microseconds of each other)!)
+
+	Whew! Now that the hard work is done setting up our data structure, we need to write a function that will add keywords and their related URLs to it. Let's see if we can design one in pseudo-code.
+
+	|
+	def add_to_index(url, keywords):
+		for every keyword in the list of keywords:
+			if the keyword IS NOT already in the index:
+				let's add it to the index
+
+			else if it IS already in the index
+			and if it doesn't already have the url:
+					then we'll append this url to it
+	|
+
+	Now let's convert it to real code.
+
+	<span class="python">
+	|
+	def add_to_index(url, keywords):
+		for keyword in keywords:
+			if word not in index:
+				index[word] = [[url, 0]]
+				# 0 is the URL's initial rank
+
+			else:
+				url_already_in_entry = False
+
+				for entry in index[word]:
+					if url == entry[0]:
+						url_already_in_entry = True
+
+				if not url_already_in_entry:
+					index[keyword].append([rank, 0])
+	|
+	</span>
+
+	So, let's visit our `search.py` file now and add these new features. Below is the entire project so far. Please note that we had previously used the `index` variable to indicate the string of text imported from the file `"index.html"`; now, we're using it to represent the search engine's index. I apologize for the confusion.
+
+	<span class="python">
+	|
+	import urllib
+	import string
+
+	index = {}
+
+	def get_links(source):
+		# from part 1
+
+	def get_keywords(source):
+		# from part 2
+
+	def add_to_index(url, keywords):
+		for keyword in keywords:
+			if keyword not in index:
+				index[keyword] = [[url, 0]]
+
+			else:
+				url_already_in_entry = False
+
+				for entry in index[keyword]:
+					if url == entry[0]:
+						url_already_in_entry = True
+
+				if not url_already_in_entry:
+					index[keyword].append([rank, 0])
+	|
+	</span>
+
+	You can download the complete `search.py` file <a href="python/search_engine/search.py">here</a>.
+</body>
+</html>

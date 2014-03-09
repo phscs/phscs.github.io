@@ -1,0 +1,172 @@
+<html>
+<head>
+	<meta charset="UTF-8">
+	<link rel="stylesheet" type="text/css" href="style.css" />
+	<script src="jquery.js"></script>
+	<script src="markdown.js"></script>
+	<script src="syntax.js"></script>
+</head>
+<body>
+	<h1>Search Engine: Part 5</h1>
+
+	We're done with our crawler! We may discover bugs down the road that'll need fixing, but for now, we're ready to move on to the last two parts of our engine.
+
+	<ul>
+		<li class="completed"><b>crawl</b> the web, which will involve:</li>
+		<ul style="list-style:circle">
+			<li class="completed">receiving a seed page's URL</li>
+			<li class="completed">downloading the contents (or _source code_) of the seed page</li>
+			<li class="completed">getting links out of the seed page's source code</li>
+			<li class="completed">getting keywords out of the seed page's source code</li>
+			<li class="completed">associating the keywords with the seed page's URL and storing those associations in an index</li>
+			<li class="completed">following all of the links from the seed page, and performing the above steps on them</li>
+		</ul>
+		<li class="checkBox"><b>rank</b> results as people click on them or as more pages link to them and then sort the index so that it returns the most highly-ranked results first</li>
+		<li class="checkBox"><b>return results</b> when someone searches for a keyword</li>
+	</ul>
+
+	How will we rank our search results? Let's glance again at the data structure of our index.
+
+	<span class="python">
+	|
+	index = {
+				"apple":   [[URL, rank], [URL, rank], [URL, rank], ...],
+				"axis":    [[URL, rank], [URL, rank], [URL, rank], ...],
+				"banana":  [[URL, rank], [URL, rank], [URL, rank], ...],
+				"banquet": [[URL, rank], [URL, rank], [URL, rank], ...],
+				...
+			}
+	|
+	</span>
+
+	What is it that we want our rank to reflect? Well, it needs to be an indication both of how relevant the search results are to the search and of how popular a page is. Let's take a test case. A guy named William Fairfax is mentioned on <a href="http://en.wikipedia.org/wiki/George_Washington" target="_blank">the Wikipedia page for George Washington</a>, but William Fairfax is a _much_ less well-known historical figure. In fact, take a look at the Google Trends graph below, which is an indication of how often people have searched for these two guys in the past fifteen or so years. (George Washington is in blue and William Fairfax is in red.)
+
+	<a href="https://www.google.com/trends/explore#q=George%20Washington%2C%20William%20Fairfax" target="_blank"><img src="images/trends.png" width="748" height="206"></a>
+
+	Similarly, here's a Google Ngram Viewer chart of how often these guys' names appeared in books from the last 200 years.
+
+	<a href="https://books.google.com/ngrams/graph?content=George+Washington%2C+William+Fairfax&year_start=1800&year_end=2000&corpus=15&smoothing=3&share=&direct_url=t1%3B%2CGeorge%20Washington%3B%2Cc0%3B.t1%3B%2CWilliam%20Fairfax%3B%2Cc0" target="blank"><img src="images/ngram.png" width="880" height="328"></a>
+
+	Clearly, George Washington is much more popular than William Fairfax. Nevertheless, these two guys both appear on the same Wikipedia page -- a page which is probably very popular because it's about George Washington. Now, here's the big question: if someone searches for William Fairfax, then is it reasonable for us to return the George Washington Wikipedia page as one of the top results? After all, it _is_ a popular page...but it's also not highly relevant to poor William Fairfax. So what I'm really asking is this: how can we balance the rank of a particular page so that it reflects both the page's popularity and the page's relevance to a keyword? Right now, we're only using a single number to reflect a URL's rank. If a page is highly popular (as in the case of the George Washington Wikipedia page), it could potentially get returned as a top result on a relatively unrelated query (William Fairfax). It's beginning to look like we might need to represent our rank with _two_ numbers instead of one! Perhaps we need a number to represent popularity and another to represent relevance. That way, a page can be highly popular among all the various keywords, but more or less relevant to particular keywords.
+
+	Our index currently uses only a single number to represent the rank. We could consider changing the data structure of our index so that it supports two numbers, but I'm going to avoid this for two reasons. First, we said that we'd really prefer _not_ to change our data structure once it's been set, since that would also involve changing all of the functions that touch the index. Second, to calculate the popularity of a particular URL, we'd have to dig through the entire index and count the number of times that a URL appears, and then we'd have to dig through the index _again_ to update all of the popularity numbers in all of the keywords where the URL appears. Such a process would be extremely inefficient. So, instead of changing our index, I'm just going to create a second dictionary called `popularity_index`. It'll contain only URLs and their popularities, like this:
+
+	<span class="python">
+	|
+	popularity_index = {
+			   	url: popularity,
+			   	url: popularity,
+			   	url: popularity,
+			   	...
+			   }
+	|
+	</span>
+
+	When and how will we use this new dictionary? We'll most likely want to use it in the crawling process. Remember, we have a step in which we extract links from the source code of a page, and then we examine those links to see whether or not they need to be crawled. Perhaps we could use this examination process to bump up the popularity of the URLs that we find. So, I'm going to write a function called `uprank_popularity()` that will do just that.
+
+	<span class="python">
+	|
+	def uprank_popularity(url):
+		if url in popularity_index:
+			popularity_index[url] += 1
+		else:
+			popularity_index[url] = 1
+	|
+	</span>
+
+	We'll call this new function during our crawling process. Here's the updated `crawl()` function.
+
+	<span class="python">
+	|
+	def crawl(seed_page_url):
+		urls_to_crawl = [seed_page_url]
+		urls_already_crawled = []
+
+		while len(urls_to_crawl) > 0 and getsizeof(index) < 536870912:
+			url = urls_to_crawl[0]
+			source = urllib.urlopen(url).read()
+
+			keywords = get_keywords(source)
+			add_to_index(url, keywords)
+
+			links = get_links(source)
+
+			for link in links:
+				uprank_popularity(link) ### here's where we call our new function!
+				if link != url and link not in urls_already_crawled:
+					urls_to_crawl.append(link)
+
+			urls_to_crawl.remove(url)
+			urls_already_crawled.append(url)
+	|
+	</span>
+
+	Good. Now that we've taken care of ranking a URL's _popularity_, we now need the ability to uprank the _relevance_ of a particular URL to a particular keyword. I'm going to define a new function called `uprank_relevance()` to help us with that. We'll call it any time a user clicks on a link from the list of search results. 
+
+	<span class="python">
+	|
+	def uprank_relevance(keyword, url):
+		if keyword in index:
+			for entry in index[keyword]:
+				if url == entry[0]:
+					entry[1] += 1
+	|
+	</span>
+
+	Okay, that's it! Let's look at the entire `search.py` file.
+
+	<span class="python">
+	|
+	import urllib
+	import string
+	from sys import getsizeof
+
+	index = {}
+	popularity_index = {} ### here we create our new popularity index
+
+	def get_links(source):
+		# stuff from part 1
+
+	def get_keywords(source):
+		# stuff from part 2
+
+	def add_to_index(url, keywords):
+		# stuff from part 3
+
+	def crawl(seed_page_url):
+			urls_to_crawl = [seed_page_url]
+			urls_already_crawled = []
+
+			while len(urls_to_crawl) > 0 and getsizeof(index) < 536870912:
+				url = urls_to_crawl[0]
+				source = urllib.urlopen(url).read()
+
+				keywords = get_keywords(source)
+				add_to_index(url, keywords)
+
+				links = get_links(source)
+
+				for link in links:
+					uprank_popularity(link)
+					if link != url and link not in urls_already_crawled:
+						urls_to_crawl.append(link)
+
+				urls_to_crawl.remove(url)
+				urls_already_crawled.append(url)
+
+	### here are our two new functions
+	def uprank_popularity(url):
+		if url in popularity_index:
+			popularity_index[url] += 1
+		else:
+			popularity_index[url] = 1
+
+	def uprank_relevance(keyword, url):
+		if keyword in index:
+			for entry in index[keyword]:
+				if url == entry[0]:
+					entry[1] += 1
+	|
+	</span>
+</body>
+</html>

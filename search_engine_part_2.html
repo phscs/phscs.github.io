@@ -1,0 +1,288 @@
+<html>
+<head>
+	<meta charset="UTF-8">
+	<link rel="stylesheet" type="text/css" href="style.css" />
+	<script src="jquery.js"></script>
+	<script src="markdown.js"></script>
+	<script src="syntax.js"></script>
+</head>
+<body>
+	<h1>Search Engine: Part 2</h1>
+
+	In the <a href="search_engine_part_1.html" target="_blank">last lesson</a>, we took the first few steps towards creating our search engine. Specifically, we tackled the first three steps in the crawling process. Here's our progress so far.
+
+	<ul>
+		<li><b>crawl</b> the web, which will involve:</li>
+		<ul style="list-style:circle">
+			<li class="completed">receiving a seed page's URL</li>
+			<li class="completed">downloading the contents (or _source code_) of the seed page</li>
+			<li class="completed">getting links out of the seed page's source code</li>
+			<li>getting keywords out of the seed page's source code</li>
+			<li>associating the keywords with the seed page's URL and storing those associations in an index</li>
+			<li>following all of the links from the seed page, and performing the above steps on them</li>
+		</ul>
+		<li><b>rank</b> results as people click on them or as more pages link to them and then sort the index so that it returns the most highly-ranked results first</li>
+		<li><b>return results</b> when someone searches for a keyword</li>
+	</ul>
+
+	Our next step for this lesson, then, will be to get the keywords out of the source code. This process will actually be a little bit more difficult than last lesson's process of extracting links.
+
+	As always, we should think about our algorithm before we actually write any code, perhaps by answering some questions first. For instance, what pieces of the text will count as keywords? How will we break the text up into pieces? How can we get rid of punctuation marks? Last time, we talked about how HTML works by wrapping text in tags. Maybe we should try something similar to last time, where we look at every character in the entire source code and collect characters if we're not inside a tag. Let's see if we can write things in pseudo-code.
+
+	|
+	def get_keywords(source):
+		for every character in the source:
+			if the character is a "<":
+				then we're probably inside a tag
+				and should turn character collection off
+			else if the character is a ">":
+				then we're probably exiting a tag
+				and should turn character collection back on
+			else if we are collecting characters:
+				if the character is a punctuation mark:
+					we'll replace it with a space
+				else:
+					we'll collect the character
+
+		then we'll break apart all of the non-tag text
+
+		and return it
+	|
+
+	Just as in our last lesson, we'll need to create some local variables that will help us keep track of whether or not we're collecting characters and to keep track of the collected characters themselves. Let's see how much of this we can convert to real code.
+
+	<span class="python">
+	|
+	def get_keywords(source):
+		# here are our local variables
+		collecting_characters = False
+		collected_characters = ""
+
+		for i in range(0, len(source)):
+			character = source[i]
+
+			if character == "<":
+				collecting_characters = False
+			elif character == ">":
+				collecting_characters = True
+			# elif collecting_characters:
+				# if character is a punctuation mark:
+					# collected_characters += " "
+				# else:
+					# collected_characters += character
+
+		# break collected_characters apart into individual words
+		# store individual words in array called keywords
+
+		# return keywords
+	|
+	</span>
+
+	Okay, so that's a good start, but it's clear that we still need to figure out a few steps. Fortunately for us, there's a useful built-in Python library called simply `string` that has a list of all of the possible punctuation marks. To get access to that list, we'll need to `import` the `string` library, but then all we have to do is ask whether or not a character is in that list. Also, you may recall that returns, newlines, and tabs are all translated to `"\r"`, `"\n"`, and `"\t"` characters, respectively. We don't want those in our keywords, so we'll replace them with spaces as well. Here we go. (NOTE: I'm adding all of these changes to last week's `search.py` file. This next code example shows the entire file.)
+
+	<span class="python">
+	|
+	import urllib
+	import string ### here's where we import the string library
+
+	index = urllib.urlopen("index.html").read()
+
+	def get_links(source):
+		# blah, blah, blah
+		# this is last week's function, remember?
+
+	def get_keywords(source):
+		collecting_characters = False
+		collected_characters = ""
+
+		for i in range(0, len(source)):
+			character = source[i]
+
+			if character == "<":
+				collecting_characters = False
+			elif character == ">":
+				collecting_characters = True
+			elif collecting_characters: ### here are the other relevant changes
+				if character in string.punctuation or character in ["\r","\n","\t"]:
+					collected_characters += " "
+				else:
+					collected_characters += character
+
+		# break collected_characters apart into individual words
+		# store individual words in array called keywords
+
+		# return keywords
+	|
+	</span>
+
+	Excellent. Here's another thing to consider: many of the words on our page will have capital letters in them. This will be a problem for us later. Imagine, for instance, that we store away the keyword `"Popcorn"` but someone comes along later and searches for `"popcorn"`. Unless we do some careful coding later on, Python will claim that these two strings aren't the same, and it won't return the right results. Therefore, I propose that we make sure that _all_ characters are changed to lowercase as they are collected. (Later, when we build the part where users can query our index for results, we'll also make sure to change all queries to lowercase so that they'll match our index.) To accomplish this, we merely call the character's `lower()` method.
+
+	<span class="python">
+	|
+	import urllib
+	import string
+
+	index = urllib.urlopen("index.html").read()
+
+	def get_links(source):
+		# blah, blah, blah
+		# this is last week's function, remember?
+
+	def get_keywords(source):
+		collecting_characters = False
+		collected_characters = ""
+
+		for i in range(0, len(source)):
+			character = source[i]
+
+			if character == "<":
+				collecting_characters = False
+			elif character == ">":
+				collecting_characters = True
+			elif collecting_characters:
+				if character in string.punctuation or character in ["\r","\n","\t"]:
+					collected_characters += " "
+				else:
+					collected_characters += character.lower() ### here it is
+
+		# break collected_characters apart into individual words
+		# store individual words in array called keywords
+
+		# return keywords
+	|
+	</span>
+
+	Next, we'll need to break the `collected_characters` apart into individual words. Again, Python is here to lend us a helping hand. Strings have a built-in method (just like `lower()`) that will split the string up into pieces at particular characters and then store them into an array: it's called `split()`. Naturally, we want to break up our string along spaces, so we'll just pass a space into the `split()` method, and then store the return array as a variable called `keywords`.
+
+	<span class="python">
+	|
+	import urllib
+	import string
+
+	index = urllib.urlopen("index.html").read()
+
+	def get_links(source):
+		# blah, blah, blah
+		# this is last week's function, remember?
+
+	def get_keywords(source):
+		collecting_characters = False
+		collected_characters = ""
+
+		for i in range(0, len(source)):
+			character = source[i]
+
+			if character == "<":
+				collecting_characters = False
+			elif character == ">":
+				collecting_characters = True
+			elif collecting_characters:
+				if character in string.punctuation or character in ["\r","\n","\t"]:
+					collected_characters += " "
+				else:
+					collected_characters += character.lower()
+
+		keywords = collected_characters.split(" ") ### here it is
+
+		return keywords
+	|
+	</span>
+
+	Now, you might think that we're done at this point, but if you were to `print keywords` right now, you'd see that it looks like this: `['', '', '', '', '', 'Index', '', '', '', '', '', '', 'Index', '', '', 'Click', 'on', 'this', 'link', 'to', 'go', 'to', 'page', '1', '', 'page', '1', '', '', '', '']`. In other words, this array, which is supposed to include just keywords, actually includes several empty strings. And not only that, but there are duplicate entries (for instance, `"Index"` is listed twice). We need to fix these problems.
+
+	To fix the empty strings problem, I'm going to add a little `while` loop.
+
+	<span class="python">
+	|
+	import urllib
+	import string
+
+	index = urllib.urlopen("index.html").read()
+
+	def get_links(source):
+		# blah, blah, blah
+		# this is last week's function, remember?
+
+	def get_keywords(source):
+		collecting_characters = False
+		collected_characters = ""
+
+		for i in range(0, len(source)):
+			character = source[i]
+
+			if character == "<":
+				collecting_characters = False
+			elif character == ">":
+				collecting_characters = True
+			elif collecting_characters:
+				if character in string.punctuation or character in ["\r","\n","\t"]:
+					collected_characters += " "
+				else:
+					collected_characters += character.lower()
+
+		keywords = collected_characters.split(" ")
+
+		### getting rid of empty spaces
+		while "" in keywords:
+			keywords.remove("")
+
+		return keywords
+	|
+	</span>
+
+	That works well. Lastly, we need to get rid of duplicates. To fix this problem, I'm going to take each word in the `keywords` list and ask whether it exists somewhere in the _rest_ of the list. If it does, then I'll remove it.
+
+	<span class="python">
+	|
+	import urllib
+	import string
+
+	index = urllib.urlopen("index.html").read()
+
+	def get_links(source):
+		# blah, blah, blah
+		# this is last week's function, remember?
+
+	def get_keywords(source):
+		collecting_characters = False
+		collected_characters = ""
+
+		for i in range(0, len(source)):
+			character = source[i]
+
+			if character == "<":
+				collecting_characters = False
+			elif character == ">":
+				collecting_characters = True
+			elif collecting_characters:
+				if character in string.punctuation or character in ["\r","\n","\t"]:
+					collected_characters += " "
+				else:
+					collected_characters += character.lower()
+
+		keywords = collected_characters.split(" ")
+
+		while "" in keywords:
+			keywords.remove("")
+
+		### getting rid of duplicates
+		for word in keywords:
+			if word in keywords[keywords.index(word)+1:]:
+				keywords.remove(word)
+
+		return keywords
+	|
+	</span>
+
+	Now we're done! This will work pretty well, but you may have realized that this function will not work perfectly in some cases; specifically, it won't return all keywords in scenarios where there are `"<"` characters outside of HTML tags. For instance, the following case would produce incomplete results.
+
+	<span class="python">
+	|
+	>>> get_keywords("&lt;b&gt;I &lt;3 U!!!&lt;/b&gt;")
+	['i']
+	|
+	</span>
+
+	Can you think of how to fix this bug?
+</body>
+</html>

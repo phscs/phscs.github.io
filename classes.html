@@ -1,0 +1,110 @@
+<html>
+<head>
+	<meta charset="UTF-8">
+	<link rel="stylesheet" type="text/css" href="style.css" />
+	<script src="jquery.js"></script>
+	<script src="markdown.js"></script>
+	<script src="syntax.js"></script>
+</head>
+<body>
+	<h1>Classes</h1>
+
+	<h3>Introduction</h3>
+
+	In any programming language, ~classes~ are probably one of the trickiest things to understand -- but they can also be one of the most powerful tools in a programmer's toolkit. A class is really just a _kind_ or _category_ of thing. It might help to start with an example: I am a person. You are a person. Each person has attributes or characteristics, like height and weight and a name and a birthdate. Each person can also do things, like speak or walk or run or jump. Therefore, we could say that there's a class of things called `Person`, and that you and I are ~instances~ (occurrences) of this class. You and I have the same attributes (a name, a birthdate, etc.), even though our attributes don't have the same values. And you and I can do the same things, like walking or speaking, even though we might walk or speak slightly differently from each other.
+
+	A class, in other words, is basically just a kind of thing that has certain characteristics and can do certain things. In programming jargon, we would say that a class is a custom ~type~ that has ~attributes~ (custom variables) and ~methods~ (custom procedures), and that can be ~instantiated~ (can have an occurrence of its kind created).
+
+	Again, an example will probably help.
+
+	<span class="python">
+	|
+	>>> class Person:
+	...		name = "_____" # an attribute
+	...		def introduceSelf(self): # a method
+	...				print "Hi, my name is " + self.name + "."
+	...
+	|
+	</span>
+
+	Okay, I just defined our new class called `Person`. It has one attribute -- `name` -- and one method -- `introduceSelf()`. One really important thing to remember when you're writing class methods is to make sure that you always pass `self` as the first argument to any method, even if the method needs no inputs at all! Okay, so now Python understands our class definition; now we just need to make an instance of it.
+
+	<span class="python">
+	|
+	>>> josh = Person()
+
+	>>> josh.name
+	'_____'
+
+	>>> josh.introduceSelf()
+	Hi, my name is _____.
+
+	>>> josh.name = "Josh"
+
+	>>> josh.introduceSelf()
+	Hi, my name is Josh.
+	|
+	</span>
+
+	Okay, let's review what we just did. We executed the line `josh = Person()`, which instantiated a copy of our class and stored it in the variable called `josh`. Then, I asked for the value of the instance's `name` variable with the command `josh.name`. Notice the "dot" that we put between `josh` and `name`; we use that notation (called "dot" notation) any time we want to get an object's attributes or methods.
+
+	<h3>Subclasses, Superclasses, and Inheritance</h3>
+
+	There might be a special kind of person that we'd like our program to know about: a teacher, or a student. We could make new classes called `Teacher` or `Student`. Now, these are really just special kinds of people, right? So we want `Teacher` and `Student` objects to still be able to do all the things that a normal `Person` can, but we might want them to do other things as well. Here's some code.
+
+	<span class="python">
+	|
+	>>> class Student:
+	...		def learn(self):
+	...				print "Learning..."
+	...
+
+	>>> bob = Student()
+
+	>>> bob.learn()
+	Learning...
+
+	>>> bob.name
+	Traceback (most recent call last):
+			File "<stdin>", line 1, in <module>
+	AttributeError: Student instance has no attribute 'name'
+	|
+	</span>
+
+	Uh-oh. We ran into a problem. We really wanted for our new student, Bob, to be able to do all of the student things _in addition to_ normal person things, like returning his name. But it's beginning to look like Bob can't be _both_ a student _and_ a person. Well, that doesn't make any sense!
+
+	Never fear! ~Subclasses~ and ~superclasses~ are here to rescue us! Subclasses are children of other classes that inherit all of the attributes and methods of those classes; and superclasses are those parent classes from which subclasses inherit things. When we're defining a class, we can tell Python that our class is a subclass of another class by including the superclass name in parentheses at the end of the `class ClassName:` statement, like this: `class ClassName(SuperClassName):`.
+
+	Therefore, we need to amend our `Student` class.
+
+	<span class="python">
+	|
+	>>> class Student(Person): # I've inserted our superclass, Person, in parentheses here
+	...		def learn(self):
+	...				print "Learning..."
+	...
+	|
+	</span>
+
+	Now we can instantiate our class `Student` with confidence, knowing that it will now have the attributes both of a student and of a normal person.
+
+	<span class="python">
+	|
+	>>> bob = Student()
+
+	>>> bob.learn()
+	Learning...
+
+	>>> bob.name
+	'_____'
+
+	>>> bob.name = "Bob Loblaw"
+
+	>>> bob.introduceSelf()
+	Hi, my name is Bob Loblaw.
+	|
+	</span>
+
+	And now it functions as we expect. Bob can do both person things and student things.
+</body>
+</html>

@@ -1,0 +1,43 @@
+<html>
+<head>
+	<meta charset="UTF-8">
+	<link rel="stylesheet" type="text/css" href="style.css" />
+	<script src="jquery.js"></script>
+	<script src="markdown.js"></script>
+	<script src="syntax.js"></script>
+</head>
+<body>
+	<h1>10001st Prime (Complete Solution)</h1>
+
+	In the previous lesson, we built a set of working functions that returned to us the 10001st prime number. Unfortunately, that process took several minutes, and I hinted at the fact that we could perhaps ~optimize~ the functions in such a way that they return quicker (but still accurate) results.
+
+	Since we already talked about this, I'll just remind you of the optimization that we chose. As we were deciding whether or not a candidate was prime, we felt the need to check every single number between 2 and our candidate to see if such a number was one of our candidate's factors. It turns out that we needn't have checked every one of those numbers; we only need to check the numbers from 2 to the square root of our candidate in order to determine if the candidate has any factors.
+
+	Here's our final solution:
+	<span class="python">
+	|
+	def isPrime(n):
+			for factor in range(2, int(n**0.5) + 1): # here's the only line that we needed to change!
+					if n % factor == 0:
+							return False
+
+			return True
+
+	def nthPrime(n):
+			primes = 0
+			possiblePrime = 1
+
+			while primes < n:
+					possiblePrime += 1
+					if isPrime(possiblePrime):
+							primes +=1
+
+			return possiblePrime
+
+	nthPrime(10001)
+	|
+	</span>
+
+	This optimization allows us to calculate the 10001st prime in _less than a second_, rather than in four or five minutes!
+</body>
+</html>

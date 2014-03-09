@@ -1,0 +1,145 @@
+body {
+	font-family:serif, sans-serif, monospace;
+	margin:2em 8em 2em 8em;
+	line-height:135%;
+	text-align:justify;
+}
+
+.inline-code {
+	font-family:monospace;
+	margin:0;
+	color:red;
+}
+
+.block-code {
+	background-color:#e8e8e8;
+	color:#333333;
+	font-family:monospace;
+	margin:1.5em 0 1.5em 0;
+	padding:1em;
+	border-radius:0.25em;
+	-moz-border-radius:0.25em;
+	-webkit-border-radius:0.25em;
+	box-shadow: inset 0.1em 0.1em 0.1em gray;
+	-moz-box-shadow: inset 0.1em 0.1em 0.1em gray;
+	-webkit-box-shadow: inset 0.1em 0.1em 0.1em gray;
+}
+
+.vocab {
+	color:#006699;
+	font-style:italic;
+	font-weight:bold;
+}
+
+img {
+	display:block;
+	margin:1.5em 0 1.5em 0;
+	padding:0;
+	border:0;
+}
+
+img.centered {
+	margin:1.5em auto 1.5em auto;
+}
+
+hr {
+	margin:2em 0 0 0;
+	padding:0;
+	border:1px solid black;
+	background-color:black;
+	border-radius:0.25em;
+	-moz-border-radius:0.25em;
+	-webkit-border-radius:0.25em;
+}
+
+a {
+	color:#669900;
+}
+
+h1 {
+	font-size:2.5em;
+}
+
+h2 {font-size:2.0em;}
+
+h3 {
+	font-size:1.5em;
+	line-height:135%;
+}
+
+h4 {}
+
+h5 {}
+
+h6 {}
+
+h1, h2, h3, h4 ,h5 ,h6 {
+	margin-bottom:1em;
+	line-height:135%;
+}
+
+p {
+	margin:0;
+	padding:0;
+}
+
+ul, ol {
+	margin-left:2em;
+}
+
+li {
+	/*margin-bottom:0.5em;*/
+}
+
+li.completed {
+	/*list-style-image:url("images/check-sm.png");*/
+	text-decoration:line-through;
+	color:#c8c8c8;
+}
+
+li.checkBox {
+	/*list-style-image:url("images/checkBox-sm.png");*/
+}
+
+.python_function, .python_class, .python_builtin, .python_variable {}
+
+.python_comment {
+	font-style:italic;
+	background-color:#FFFF70;
+	color:#333333;
+	padding:0.1em 0.25em 0.1em 0.25em;
+	border-radius:0.25em;
+	-moz-border-radius:0.25em;
+	-webkit-border-radius:0.25em;
+	/*
+	box-shadow: 0.1em 0.1em 0.1em gray;
+	-moz-box-shadow: 0.1em 0.1em 0.1em gray;
+	-webkit-box-shadow: 0.1em 0.1em 0.1em gray;
+	*/
+}
+
+.python_comment_special {
+	font-style:italic;
+	background-color:#FFC747;
+	color:#333333;
+	padding:0.1em 0.25em 0.1em 0.25em;
+	border-radius:0.25em;
+	-moz-border-radius:0.25em;
+	-webkit-border-radius:0.25em;
+	/*
+	box-shadow: 0.1em 0.1em 0.1em gray;
+	-moz-box-shadow: 0.1em 0.1em 0.1em gray;
+	-webkit-box-shadow: 0.1em 0.1em 0.1em gray;
+	*/
+}
+
+@media print {
+	body {
+		margin:0;
+	}
+
+	.python_comment, .python_comment_special {
+		background-color:white;
+		color:gray;
+	}
+}

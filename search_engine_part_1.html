@@ -1,0 +1,167 @@
+<html>
+<head>
+	<meta charset="UTF-8">
+	<link rel="stylesheet" type="text/css" href="style.css" />
+	<script src="jquery.js"></script>
+	<script src="markdown.js"></script>
+	<script src="syntax.js"></script>
+</head>
+<body>
+	<h1>Search Engine: Part 1</h1>
+
+	<i>NOTE: To work the examples on this page, you'll need to download the HTML files from <a href="python/search_engine/pages.zip">here</a> and extract them.</i>
+
+
+
+	Building a search engine is a massively complex business, so we'll only attempt to create the skeleton of one. A real search engine would have to deal with getting input from a client at a web page and passing it to a server, and then passing the results back to the client. It would also have to deal with handling large amounts of traffic; a single server wouldn't suffice. It would have to deal with properly ranking its index so that users receive the most relevant results when they search. It would have to be a good Internet citizen by not over-crawling the web, since crawling consumes both bandwidth and remote server resources.
+
+	Those things are outside of the scope of our skills, so for now we'll spend our time just focusing on the core mechanics of our search engine. But before we can begin writing any code, we should outline the things that we want our search engine to be able to do. Here's a tentative list; we might change it later. We want our search engine to:
+
+	<ul>
+		<li>crawl the web, which will involve:</li>
+		<ul style="list-style:circle">
+			<li>receiving a seed page's URL</li>
+			<li>downloading the contents (or ~source code~) of the seed page</li>
+			<li>getting links out of the seed page's source code</li>
+			<li>getting keywords out of the seed page's source code</li>
+			<li>associating the keywords with the seed page's URL and storing those associations in an index</li>
+			<li>following all of the links from the seed page, and performing the above steps on them</li>
+		</ul>
+		<li>rank results as people click on them or as more pages link to them and then sort the index so that it returns the most highly-ranked results first</li>
+		<li>return results when someone searches for a keyword</li>
+	</ul>
+
+	We'll try to tackle these steps in order, starting (in this lesson) with receiving a seed page URL, downloading the contents of the seed page, and extracting the links from the source code. Because the link extraction process will require an understanding of HTML, we'll cover the necessary HTML bit later in this lesson. Our first steps, however, will be taken in Python. Fortunately for us, Python has several built-in libraries that will help us on our quest. To gain access to these libraries, we'll have to `import` them. And we need one library in particular: `urllib`.
+
+	Let's make a new Python file. I'm going to call mine `search.py`. Here's what we'll put inside.
+
+	<span class="python">
+	|
+	import urllib
+	|
+	</span>
+
+	The `urllib` library will allow us to access URLs across the Internet, which is really handy. To get the contents of a web page, we need to call the `urllib` library's `urlopen()` function (passing in the URL of our index page, which for now is just `"index.html"`), and then its `read()` function. We'll store the results in a variable called `index`, which will represent the source code of the page.
+
+	<span class="python">
+	|
+	import urllib
+
+	index = urllib.urlopen("index.html").read()
+	|
+	</span>
+
+	The source code of the `index.html` page looks like this:
+
+	|
+	&lt;html&gt;
+	&lt;head&gt;
+			&lt;title&gt;Index&lt;/title&gt;
+	&lt;/head&gt;
+	&lt;body&gt;
+			&lt;h1&gt;Index&lt;/h1&gt;
+			Click on this link to go to page 1: &lt;a href=&quot;page1.html&quot;&gt;page 1&lt;/a&gt;
+	&lt;/body&gt;
+	&lt;/html&gt;
+	|
+
+	You can go <a href="python/search_engine/index.html" target="_blank">here</a> to see how the browser interprets the HTML code.
+
+	Anyway, the `read()` function crams all of that source code into a single string, which is now stored in our `index` variable, and which looks like this: `&#39;&lt;html&gt;\r\n&lt;head&gt;\r\n\t&lt;title&gt;Index&lt;/title&gt;\r\n&lt;/head&gt;\r\n&lt;body&gt;\r\n\t&lt;h1&gt;Index&lt;/h1&gt;\r\n\tClick on this link to go to page 1: &lt;a href=&quot;page1.html&quot;&gt;page 1&lt;/a&gt;\r\n&lt;/body&gt;\r\n&lt;/html&gt;&#39;`.
+
+	Now, we need to write a function that extracts the links from the `index` variable. Here's where we need to know a bit about HTML. In HTML, which stands for Hyper-Text Markup Language, text is "marked up" with HTML tags, which basically just means that the text is wrapped inside an opening and closing tag pair. Here's an example. If I want to make some HTML text <b>bold</b>, then I wrap it in `&lt;b&gt;` tags, like this: `&lt;b&gt;this text is bold&lt;/b&gt;`. (Note that the closing tag always begins with a forward slash: "/".) When the browser interprets that snippet of code, it'll display it as we expect: <b>this text is bold</b>. As you can see from our page's source code, there are many HTML tags in even a simple page. The tags that we're after, however, are the link tags, which are the `&lt;a&gt;` tags. The link itself is listed as one of the link ~attributes~ of the `&lt;a&gt;` tag, specifically as its `href` attribute. You can see in the code above, for instance, the tag that links to Page 1: `&lt;a href=&quot;page1.html&quot;&gt;page 1&lt;/a&gt;`.
+
+	Remember that a string is just a sequence of characters. How can we extract link URLs from the `index` variable? Well, we just have to search through the string until we find the characters `'href="'` and then grab the characters that come _after_ that location. We'll stop grabbing characters when we come to another `'"'` character. Let's see if we can write all of that in pseudo-code first.
+
+	<span class="python">
+	|
+	def get_links(source code):
+			links = []
+			link_temp = ""
+
+			for every character in the source code:
+					if the six characters before this character add up to 'href="' or "href='":
+							then we'll turn on character collection
+
+					if character collection is on:
+							if this character is '"' or "'":
+									then we'll turn character collection off
+									and append link_temp to links
+									and reset link_temp
+							otherwise:
+									we'll add this character to link_temp
+	|
+	</span>
+
+	Now we translate it to real code and add a call to the function at the very bottom.
+
+	<span class="python">
+	|
+	def get_links(source):
+			links = []
+			link_temp = ""
+			collecting_characters = False
+
+			for i in range(0, len(source)):
+					character = source[i]
+
+					if source[i-6 : i] == 'href="' or source[i-6 : i] == "href='":
+							collecting_characters = True
+
+					if collecting_characters:
+							if character == '"' or character == "'":
+									collecting_characters = False
+									links.append(link_temp)
+									link_temp = ""
+							else:
+									# this is identical to link_temp = link_temp + character
+									link_temp += character
+
+			return links
+
+	print get_links(index)
+	|
+	</span>
+
+	Now, our entire file should look like this:
+
+	<span class="python">
+	|
+	import urllib
+
+	index = urllib.urlopen("index.html").read()
+
+	def get_links(source):
+			links = []
+			link_temp = ""
+			collecting_characters = False
+
+			for i in range(0, len(source)):
+					character = source[i]
+
+					if source[i-6 : i] == 'href="' or source[i-6 : i] == "href='":
+							collecting_characters = True
+
+					if collecting_characters:
+							if character == '"' or character == "'":
+									collecting_characters = False
+									links.append(link_temp)
+									link_temp = ""
+							else:
+									link_temp += character
+
+			return links
+
+	print get_links(index)
+	|
+	</span>
+
+	Lastly, we should test it out to make sure that it's working properly. In a terminal, navigate to the directory in which you've saved your `search.py` file, and run `python search.py`. Your results should look like this:
+
+	<span class="python">
+	|
+	['page1.html']
+	|
+	</span>
+</body>
+</html>

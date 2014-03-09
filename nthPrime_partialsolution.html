@@ -1,0 +1,227 @@
+<html>
+<head>
+	<meta charset="UTF-8">
+	<link rel="stylesheet" type="text/css" href="style.css" />
+	<script src="jquery.js"></script>
+	<script src="markdown.js"></script>
+	<script src="syntax.js"></script>
+</head>
+<body>
+	<h1>10001st Prime (Partial Solution)</h1>
+
+	Although several people were missing from our last meeting, the few of us that were there attempted to answer this question: What is the 10001st prime number?
+
+	We first spent some time discussing the definition of prime numbers. Prime numbers, as you may recall, are numbers that are only evenly divisible (i.e., no remainders) by themselves and 1. For example, the number 5 can be evenly divided by itself and 1, but not by any other number -- which means that 5 is a prime number. On the other hand, the number 6 can not only be evenly divided by itself and 1, but also by 2 and 3 -- which means that it is _not_ a prime number.
+
+	When we started to design our program, we decided that we'd need to take the following steps to reach the 10001st prime number.
+
+	<ol>
+		<li>We need to start checking every number for primacy, beginning with the number 2 (we don't really count 1 or 0 as prime numbers, and we don't need to include negative numbers because they're just mirrors of the positive numbers).</li>
+		<li>We need to keep track of how many prime numbers we have. If any particular number that we check turns out to be a prime number, then we need to bump up our prime number count.</li>
+		<li>When we reach our goal number of primes (in this case, 10001), then we'll return the current number that we've been checking out.</li>
+	</ol>
+
+	We should try to write these instructions out in ~pseudo-code~, or "false" code. Pseudo-code isn't real Python code; it's just a way for us to write out our thought process. Later, we'll translate it into real Python statements.
+
+	<span class="python">
+	|
+	primes = 0
+	# we don't yet have any prime numbers
+
+	possiblePrime = 2
+	# possiblePrime is the number we'll test for primacy
+
+	while the number of primes is less than 10001:
+			if the possiblePrime is a prime number, then:
+					add 1 to primes
+
+			add 1 to possiblePrime
+			# that way, we'll test the next number when we run through the while loop again
+
+	print possiblePrime
+	|
+	</span>
+
+	Okay, now let's see if we can re-write it in real Python.
+
+	<span class="python">
+	|
+	primes = 0
+	possiblePrime = 2
+
+	while primes < 10001:
+			if [possiblePrime is a prime number]: # this line is still pseudo-code
+					primes = primes + 1
+			possiblePrime = possiblePrime + 1
+
+	print possiblePrime
+	|
+	</span>
+
+	All right. We did pretty well, but we still don't know the code for checking whether a number is a prime number. Let's write a function that can check whether a number is prime. Here it is in pseudo-code.
+
+	<span class="python">
+	|
+	def isPrime(n):
+			if n is evenly divisible by any number between one and itself (i.e., 2 through n-1), then:
+					return False
+			return True
+	|
+	</span>
+
+	And let's go ahead and translate this into real Python code.
+
+	<span class="python">
+	|
+	def isPrime(n):
+			for possibleFactor in range(2, n):
+					if n % possibleFactor == 0:
+							return False
+			return True
+	|
+	</span>
+
+	Let's recall a few of our earlier lessons. The `range` function returns an array of all the numbers from the start value (in this case, `2`) up to but not including the end value (in this case, `n`). Then, the `for` loop takes each of those values, stores them one-at-a-time into the variable `possibleFactor` and runs through the code block. Finally, the `%` or "modulo" operator simply asks, "What is the remainder when `n` is divided by `possibleFactor`?" If the division _doesn't_ have a remainder (i.e., if the remainder is zero, and therefore the first number is evenly divisible by the second), then the number is _not_ a prime number, in which case we return `False`. But if we run through all possible factors and none of them are evenly divisible, then `n` is a prime number, in which case we return `True`.
+
+	Now let's return to our original bit of code to see if we can integrate our new `isPrime` function.
+
+	<span class="python">
+	|
+	primes = 0
+	possiblePrime = 2
+
+	while primes < 10001:
+			if isPrime(possiblePrime): # here's where we call our new function
+					primes = primes + 1
+			possiblePrime = possiblePrime + 1
+
+	print possiblePrime
+	|
+	</span>
+
+	Good. But before we run it in the Python shell, let's remind ourselves that we don't actually know what the 10001st prime number is. So if we run the code and it produces a number, how will we know that the number is right? Well, we won't. So what we need to do is find some small prime number, like the 3rd prime number, or the 5th. To make it a bit easier on us so that we don't have to keep re-typing a bunch of lines of code, I'm going to cram all of the previous stuff into a function, and replace the `10001` with a variable.
+
+	<span class="python">
+	|
+	def nthPrime(n):
+			primes = 0
+			possiblePrime = 2
+
+			while primes < n:
+					if isPrime(possiblePrime):
+							primes = primes + 1
+					possiblePrime = possiblePrime + 1
+
+			return possiblePrime
+	|
+	</span>
+
+	That'll go much more quickly. Now, let's ask for the 3rd prime (which should return `5`) and the 5th prime (which should return `11`).
+
+	<span class="python">
+	|
+	>>> nthPrime(3)
+	6
+
+	>>> nthPrime(5)
+	12
+	|
+	</span>
+
+	Uh-oh. Those weren't the numbers we expected! They're not even prime numbers! But they were close to what we wanted; they were only off by 1. So what went wrong? Well, it turns out that we put two of our steps in the wrong order. Think about the very last run through the `while` loop before it finishes. If we're asking for the 5th prime number, then at the last run through the `while` loop, `primes` would be equal to `4` and `possiblePrime` would be equal to `11`, which is the number we're hoping to return. As we run through the `while` loop that last time, we ask, "Is `11` a prime number?" It is, so we bump `primes` up to `5`. Then, before exiting the `while` loop, we bump `possiblePrime` up to `12`. Oops! That's where our problem is. We don't want to bump `possiblePrime` up any more once we've reached our goal number of primes.
+
+	It's possible to make a "hackish" solution to the problem, by which I mean that it's possible to do something like `return possiblePrime-1` at the end of the function, which will return the right number. But when we have to do something like that, then it's obvious that we haven't designed our function in the right way. A better solution would simply be to move the `if` block to the bottom of the `while` loop, like this:
+
+	<span class="python">
+	|
+	def nthPrime(n):
+			primes = 0
+			possiblePrime = 2
+
+			while primes < n:
+					possiblePrime = possiblePrime + 1
+					if isPrime(possiblePrime):
+							primes = primes + 1
+
+			return possiblePrime
+	|
+	</span>
+
+	Now let's run it again.
+
+	<span class="python">
+	|
+	>>> nthPrime(3)
+	7
+
+	>>> nthPrime(5)
+	13
+	|
+	</span>
+
+	Well, crud. We seem to have introduced a new problem. Now our function is returning prime numbers, but it's returning the prime number _after_ the one we wanted. Remember that the first several prime numbers are 2, 3, 5, 7, 11, and 13. When we asked for the 3rd prime number, we expected 5, but got 7 instead. When we asked for the 5th prime number, we expected 11, but got 13 instead.
+
+	Here's the problem: we begin our function by setting `possiblePrime` to `2`, and then the first thing that happens when we enter the `while` loop is that `possiblePrime` gets bumped up to `3`. This means that we can never even test whether or not 2 is a prime number, and therefore it doesn't get added to our `primes` count. To fix this little problem, let's just set `possiblePrime` to `1` at the beginning of our function.
+
+	<span class="python">
+	|
+	def nthPrime(n):
+			primes = 0
+			possiblePrime = 1
+
+			while primes < n:
+					possiblePrime = possiblePrime + 1
+					if isPrime(possiblePrime):
+							primes = primes + 1
+
+			return possiblePrime
+	|
+	</span>
+
+	Let's try running it again.
+
+	<span class="python">
+	|
+	>>> nthPrime(3)
+	5
+
+	>>> nthPrime(5)
+	11
+	|
+	</span>
+
+	Yay! It looks like it's working. Now, let's ask it for the 10001st prime number! But beware: it'll probably take a minute or two for this program to run, so don't be surprised if it looks like the program has frozen for a little while.
+
+	<span class="python">
+	|
+	>>> nthPrime(10001)
+	104743
+	|
+	</span>
+
+	Awesome. The 10001st prime number is in fact 104743. Our program works exactly as expected. There's only one problem with it: it takes a _long_ time to run. If we asked for the 100001st prime number, it would take roughly four and a half hours for the program to finish. If we asked for the 1000001st prime number, it would take almost three weeks! There are ways that we can ~optimize~ our program that will help it to run more quickly while still returning the right numbers. Can you think of what those ways are? For next time, see if you can optimize our program.
+
+	Here's our complete code so far, just for reference:
+
+	<span class="python">
+	|
+	def isPrime(n):
+			for possibleFactor in range(2, n):
+					if n % possibleFactor == 0:
+							return False
+			return True
+
+	def nthPrime(n):
+			primes = 0
+			possiblePrime = 1
+
+			while primes < n:
+					possiblePrime = possiblePrime + 1
+					if isPrime(possiblePrime):
+							primes = primes + 1
+
+			return possiblePrime
+	|
+	</span>
+</body>
+</html>

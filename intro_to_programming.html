@@ -1,0 +1,54 @@
+<html>
+<head>
+	<meta charset="UTF-8">
+	<link rel="stylesheet" type="text/css" href="style.css" />
+	<script src="jquery.js"></script>
+	<script src="markdown.js"></script>
+	<script src="syntax.js"></script>
+</head>
+<body>
+	<h1>Intro to Programming</h1>
+
+	<h3>What is computer programming?</h3>
+
+	Computer programming is the process of giving a computer a set of instructions to follow.
+
+	There's one thing that we always need to keep in mind when we're programming: computers are stupid. They're quite good at computing various things, but they're absolutely terrible at guessing what you mean when you give instructions. Human language, and English specifically, is very loose and lazy, and just because we're sometimes able to understand each other doesn't mean that a computer will always understand us. Therefore, computer engineers have created languages that the computer will understand, provided that you speak that language. Those languages, called ~programming languages~, are in many ways similar to English, but have very strict ~grammars~ (linguistic structures) and ~syntaxes~ (legitimate sentence forms).
+
+	Besides the fact that computers are currently unable to infer meaning from ambiguous English statements, they also follow instructions extremely literally and in exactly the order that the instructions are given. This poses problems for human programmers who often think metaphorically or non-sequentially. It often takes a lot of effort to convert an easy human task into something that a machine can do because it requires trying to think about the task in the way that the computer will think about it. But this process is actually one of the benefits of learning to write computer programs; it helps you to think more clearly and sequentially and literally about everyday tasks.
+
+	To get a better feel for how to write a program, try to imagine giving a robot instructions for making a peanut butter and jelly sandwich, or some other task. The more difficult the task, the more you'll have to think of how to explain the process to the robot.
+
+	<h3>What is a programming language? How many programming languages are there? Which ones are the most popular or the most useful? Which ones are the easiest to use?</h3>
+
+	Computers and humans don't, by default, speak the same language. Computers think in zeroes and ones (which correspond to "on" and "off" electrical switches inside the computer), whereas humans think in a human language like English. In order for us to be able to give instructions to a computer, we have to speak something that the computer will understand - but at the same time, it's impossibly difficult for humans to try to read and write and think in zeroes and ones. Therefore, computer engineers came up with a compromise: they created artificial languages, called programming languages, that look a little bit like English but which can be translated inside the computer into zeroes and ones. This compromise forces both parties to give up a little of their time: it takes time for the programmer to translate his instructions from English into the programming language, and it takes time for the computer to translate the instructions from the programming language to zeroes and ones.
+
+	There are hundreds of programming languages (or even thousands, depending on which variants you count). Many are old and aren't used any more, and more are being created every day. The popularity of programming languages is always changing, but right now, some of the top programming languages are Java, C, C++, C#, Objective-C, PHP, Python, and Ruby. There are also some psuedo-languages like HTML, JavaScript, and CSS that form the basis for web programming. Other languages, like SQL, are used for getting information from databases (a process called "querying"). Many of these languages were used to create many of the products that you use every day. For instance, all iOS apps (for iPhone and iPad) are written in Objective-C. Twitter was written in a combination of Ruby and the web languages HTML, JavaScript, and CSS. Facebook was made mostly in PHP, but is now used in combination with other languages like C++ and Java - and, of course, the web languages.
+
+	Two major considerations when picking a language to learn are (1) popularity and (2) readability. All of the languages in the list above are very popular, which means that they will be well documented and have thriving communities around them. But not all of the languages are equally readable. Java, the C languages, and PHP barely look like English at all; they often look more like cryptic numbers and symbols. Python and Ruby, on the other hand, were built on the idea that code should be easy to read and write, which means that Python and Ruby code look much more like English than other languages. Since Python is an older and more mature language than Ruby, it makes sense as a great starting point for beginning programmers. We'll be primarily using Python in this club, though we may end up looking at some of the web languages as well.
+
+	<h3>What kinds of Python commands can the computer understand? What kinds of "things" can the computer handle?</h3>
+
+	All of the possible commands are listed in the Python documentation, which you can find on the Python website. There are probably hundreds or even thousands of Python commands that a computer can understand, so it would be impossible to try to describe them all here. Instead, I want to tell you a little bit more about the kinds of things that Python can handle. These "things" are actually called ~types~, and there are just a few basic types that Python can allow you to manipulate.
+
+	Python can manipulate ~numbers~. They can also do lots of basic math operations on those numbers (addition, subtraction, multiplication, division, exponents, etc.). Within numbers, the computer usually differentiates between integers (counting numbers), floating point numbers (decimals), doubles (extreme precision decimals), and long numbers (numbers with lots and lots of digits).
+
+	Python can manipulate ~strings~. Strings are any sequence of characters (from any human language), including letters, numbers, and symbols. Strings are usually enclosed in quotation marks. To be clear, the computer can't understand strings at all; it merely manipulates them for the programmer.
+
+	Python can manipulate ~booleans~. Booleans are just `true` and `false` values.
+
+	Python can manipulate ~arrays~ (sometimes called ~lists~). Arrays are, as the second name implies, just a list of things.
+
+	Python can manipulate ~dictionaries~ (sometimes called ~hashes~). Dictionaries are similar to arrays, but they link things together in pairs of keys and values. When you ask the computer to look up a key in a dictionary, it will return the value that has been paired with that key, similar to looking up a word in an actual physical dictionary (hence the name of the type).
+
+	Python can manipulate ~functions~ (sometimes called ~procedures~ or ~methods~). Functions are multiple commands rolled into one. They can accept inputs and give outputs, though neither are required.
+
+	Python can manipulate variables. To be clear, variables aren't a type; instead, they merely represent things. In algebra, a variable is usually given by a single letter, and usually represents a number. But in programming, variables can be given by a single letter or by a combination of letters, numbers, and underscores, and they can represent numbers, strings, booleans, arrays, dictionaries, functions, or classes.
+
+	Python can manipulate ~classes~. Classes are just templates for things. Usually, classes have their own variables and functions. (This isn't a very clear or complete definition, but we'll talk more about classes later.)
+
+	<h3>Okay, so how do I give Python commands to the computer?</h3>
+
+	There are usually two ways of giving commands to a computer: you can either (1) write all of your instructions in a text file and ask the computer to interpret them all at once, or (2) give the computer instructions one at a time from the ~command line~ (sometimes called a ~shell~). We'll show you how to do both of those things.
+</body>
+</html>

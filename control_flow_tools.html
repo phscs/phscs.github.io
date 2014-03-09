@@ -1,0 +1,193 @@
+<html>
+<head>
+	<meta charset="UTF-8">
+	<link rel="stylesheet" type="text/css" href="style.css" />
+	<script src="jquery.js"></script>
+	<script src="markdown.js"></script>
+	<script src="syntax.js"></script>
+</head>
+<body>
+	<h1>Control Flow Tools</h1>
+
+	Suppose that I asked you to print your name using Python. That's pretty easy, right?
+
+	<span class="python">
+	|
+	>>> print 'Josh'
+	Josh
+	|
+	</span>
+
+	Suppose I asked you to print your name one hundred times. Hm...well, you could, I suppose, type `print 'Josh'` a hundred times into the Python shell, but that's not very elegant. To write a better solution, we'll need to learn about a few new tools -- `range()` and `for` -- and a few new concepts -- ~indentation~ and ~iteration~.
+
+	The first tool, `range()`, generates an array that includes all of the numbers from the starting value up to but not including the final value. For example:
+
+	<span class="python">
+	|
+	>>> range(0,3)
+	[0, 1, 2]
+
+	>>> range(5, 15)
+	[5, 6, 7, 8, 9, 10, 11, 12, 13, 14]
+	|
+	</span>
+
+	The other tool, `for`, allows us to run over an array of things and do something with each element in the array (a process called _iteration_). It'll be hard to talk about how `for` works without an example, so here's an example. I'll explain it a bit more afterwards.
+
+	<span class="python">
+	|
+	>>> for number in range(0, 3):
+	...		print number
+	...
+	0 # (this is the output)
+	1
+	2
+	|
+	</span>
+
+	There are a few things to notice here. First of all, the code for this example is spread across multiple lines. Unsurprisingly, we'll have to begin to use multiple lines for our code if we want our programs to do anything interesting. Second, the first line begins at the left margin of the shell, but subsequent lines in the `for` loop are _indented_ (and you can use either spaces or the tab key; Python doesn't care as long as the lines are indented to the same depth). Python shows you that the `for` statement is incomplete by putting the ellipsis (...) at the beginning of each line. It's important to properly indent your code, since Python looks for line breaks and indentation as it tries to understand your instructions. Last, and probably the most unusual thing to understand, is how Python operates inside that block of code. So here's how it works: Python generates an array of all the numbers from 0 to 3, then it takes the first element in that array and assigns it to a variable called `number` (which could've been called by any name, but `number` seemed the simplest to me), then runs the block of indented code beneath the `for` statement. When the block finishes running, Python returns to the top of the `for` loop, grabs the second element in the array, assigns it to the variable `number`, and then runs the code block again. It keeps looping around like this until all of the elements in the array have been used in the code block, and then it goes on to whatever's next (which, in the case of the previous example, is nothing).
+
+	So, if we want to print our names one hundred times, we could do something like the code below. (Note that, in this case, I won't even use the variable `number` in the code block! It's just a counting mechanism to make sure that we run the block one hundred times.)
+
+	<span class="python">
+	|
+	>>> for number in range(0, 100):
+	...		print "Josh"
+	...
+	Josh
+	Josh
+	Josh
+	<span style="opacity:0.75">Josh</span>
+	<span style="opacity:0.50">Josh</span>
+	<span style="opacity:0.25">Josh</span>
+	<span style="opacity:0.05">Josh</span>
+	|
+	</span>
+
+	And so on. Anyway, the `for` loop is what's called a ~control flow tool~; it allows us to control the flow of the program. Another useful control flow tool is `if`, which allows us to perform blocks of code only under certain conditions. For example:
+
+	<span class="python">
+	|
+	>>> if 5 > 4:
+	...		print "Hooray!"
+	...
+	Hooray!
+	|
+	</span>
+
+	Just like `for`, `if` uses a colon at the end of its first line, and then indented subsequent lines as the stuff to be executed if the condition is met. We can also specify what to do if the condition is not met by using the `else` statement.
+
+	<span class="python">
+	|
+	>>> if 3 > 4:
+	...		print "Hooray!"
+	... else:
+	...		print "Nope."
+	...
+	Nope.
+	|
+	</span>
+
+	Obviously, `3` is not greater than `4`, so the initial condition of the `if` statement wasn't met. Therefore, Python found the `else` statement and executed its code block.
+
+	If we're comparing numbers to determine whether or not a block of code should be executed, we use the `<`, `>`, and `==` operators. You're probably already familiar with the "greater than" and "less than" operators, but you might be surprised to see a double equals sign. The double equals sign asks, "Are two things equal to each other?" You might be tempted to use a single equals sign in a comparison, but it's important to remember that the single equals sign is reserved for assignment (when you're assigning values to variables). Actually, we can use the double equals sign to compare any objects (strings, numbers, arrays, dictionaries, functions, classes, etc.).
+
+	<span class="python">
+	|
+	>>> if "win" == "win":
+	...		print 5 * 4
+	...
+	20
+	|
+	</span>
+
+	Our last important control flow tool is `while`, which is sort of a blend of `for` and `if`. It allows us to loop around and around like `for`, but only when we meet conditions like `if`.
+
+	<span class="python">
+	|
+	>>> n = 0
+
+	>>> while n < 3:
+	...		print n
+	...		n = n + 1
+	...
+	0
+	1
+	2
+	|
+	</span>
+	<hr />
+
+	<h1>Random, Raw Input, and Int</h1>
+
+	Okay, the following stuff isn't directly related to control flow tools any more, but we'll want to know just a few more small things if we want to build a number guessing game. To get started using random numbers, we need import a Python ~library~ (which is just a collection of scripts that someone else wrote) called `random`. We can do that using the `import` command.
+
+	<span class="python">
+	|
+	>>> import random
+	|
+	</span>
+
+	The `random` library will allow us to generate random decimal numbers that fall between `0` and `1`, like so:
+
+	<span class="python">
+	|
+	>>> random.random()
+	0.5460910478205573
+	|
+	</span>
+
+	We can also use the `random` library to specify a range of integers in which we'd like our random number to fall. If we wanted a random integer between `0` and `10`, we could say this:
+
+	<span class="python">
+	|
+	>>> random.randrange(0, 10)
+	7
+	|
+	</span>
+
+	So, you can probably already see how we could begin to use these tools to create a random number guessing game. Here's an extremely simple version.
+
+	<span class="python">
+	|
+	>>> hiddenNumber = random.randrange(1, 100)
+	# a random number between 1 and 100 is now stored in the variable hiddenNumber
+
+	>>> myGuess = 50
+
+	>>> if myGuess == hiddenNumber:
+	...		print "Yay! You won!"
+	... else:
+	...		print "Nope. Try again."
+	...
+	'Nope. Try again.'
+	|
+	</span>
+
+	Okay, there are only two more small things to learn before we can build our game: `raw_input()` and `int()`. The first, `raw_input()`, allows a user to type things into the shell while the program is running. It returns that input as a string.
+
+	<span class="python">
+	|
+	>>> name = raw_input("Please type your name: ")
+	Please type your name: Josh
+
+	>>> print name
+	Josh
+	|
+	</span>
+
+	The other function, `int()`, can either convert a floating point (decimal) number to an integer, or it can convert a string containing a number into an integer. Behold.
+
+	<span class="python">
+	|
+	>>> "235" + 1
+	# this produces an error :(
+
+	>>> int("235") + 1
+	236	# this works just fine :)
+	|
+	</span>
+
+	At last! We now know all the things necessary to build a random number guessing game! The short example game I provided earlier was a bit too simplistic. What we really want is a game where the computer generates a random number behind the scenes, asks us to input a guess, converts that guess from a string to an integer, compares it to its own random number, notifies us as to whether our guess is too low or too high or exactly right, and then allows us to guess again by returning to the point in its program where we can enter a guess (or exit the program if we got the guess right). For extra practice, try designing the program in such a way that we have only a limited number of guesses to get the number right before the program exits.
+</body>
+</html>
