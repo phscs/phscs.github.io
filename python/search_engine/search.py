@@ -1,14 +1,16 @@
 """
 TODO:
 	-query function must rank results or call a ranking function
+	-databasing
 """
 
 import urllib
 import string
 from urlparse import urlparse
+import pickledb
 
-index = {}
-popularity_index = {}
+index = pickledb.load("index.db", False)
+popularity_index = pickledb.load("popularity_index.db", False)
 
 # PART 1
 def get_links(source):
@@ -62,21 +64,25 @@ def get_keywords(source):
 # PART 3
 def add_to_index(url, keywords):
 	for keyword in keywords:
-		if keyword not in index:
-			index[keyword] = [[url, 0]]
+		if index.get(keyword) == None:
+			index.set(keyword, [[url, 0]])
 
 		else:
 			url_already_in_entry = False
 
-			for entry in index[keyword]:
+			for entry in index.get(keyword):
 				if url == entry[0]:
 					url_already_in_entry = True
 
 			if not url_already_in_entry:
-				index[keyword].append([url, 0])
+				index.get(keyword).append([url, 0])
+
+	index.dump()
 
 # PART 4
 def crawl(seed_page_url, this_domain_only):
+		index.deldb()
+		index.dump()
 		urls_to_crawl = [seed_page_url]
 		urls_already_crawled = []
 		crawls = 0
@@ -98,7 +104,7 @@ def crawl(seed_page_url, this_domain_only):
 								urls_to_crawl.append(link)
 						else:
 							urls_to_crawl.append(link)
-						
+
 			except:
 				pass
 
@@ -108,21 +114,26 @@ def crawl(seed_page_url, this_domain_only):
 
 # PART 5
 def uprank_popularity(url):
-	if url in popularity_index:
-		popularity_index[url] += 1
+	if url in popularity_index.get(url):
+		popularity_index.set(url, popularity_index.get(url) + 1)
 	else:
-		popularity_index[url] = 1
+		popularity_index.set(url, 1)
+
+	popularity_index.dump()
 
 def uprank_relevance(keyword, url):
-	if keyword in index:
-		for entry in index[keyword]:
-			if url == entry[0]:
-				entry[1] += 1
+	entries = index.get(keyword)
+
+	for entry in entries:
+		if url == entry[0]:
+			entry[1] += 1
+
+	index.set(keyword, entries)
+	index.dump()
 
 # PART 6
 def query(keyword):
-	if keyword in index:
-		return index[keyword]
+	return index.get(keyword)
 
 def rank_results(results):
 	pass

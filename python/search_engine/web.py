@@ -8,7 +8,7 @@ import search as se
 import thread
 
 this_domain_only = True
-thread.start_new_thread(se.crawl, ("index.html", this_domain_only))
+thread.start_new_thread(se.crawl, ("http://premiergranbury.com/", this_domain_only))
 
 home = "<html>\
 	<body onLoad='document.search_form.query.focus()'>\
@@ -19,7 +19,7 @@ home = "<html>\
 	</body>\
 	</html>"
 
-class SearchEngine(object):
+class ClientSearchPage(object):
 	def index(self):
 		return home
 
@@ -44,4 +44,4 @@ class SearchEngine(object):
 	index.exposed = True
 	search.exposed = True
 
-cp.quickstart(SearchEngine())
+cp.quickstart(ClientSearchPage())
