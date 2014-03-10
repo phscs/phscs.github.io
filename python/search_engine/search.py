@@ -1,12 +1,11 @@
 """
 TODO:
-	-define query function
-		-must defensively return index results
-		-must rank results or call a ranking function
+	-query function must rank results or call a ranking function
 """
 
 import urllib
 import string
+from urlparse import urlparse
 
 index = {}
 popularity_index = {}
@@ -77,7 +76,7 @@ def add_to_index(url, keywords):
 				index[keyword].append([url, 0])
 
 # PART 4
-def crawl(seed_page_url):
+def crawl(seed_page_url, this_domain_only):
 		urls_to_crawl = [seed_page_url]
 		urls_already_crawled = []
 		crawls = 0
@@ -94,7 +93,12 @@ def crawl(seed_page_url):
 
 				for link in links:
 					if link != url and link not in urls_already_crawled and link not in urls_to_crawl:
-						urls_to_crawl.append(link)
+						if this_domain_only:
+							if get_domain_name(link) == get_domain_name(seed_page_url):
+								urls_to_crawl.append(link)
+						else:
+							urls_to_crawl.append(link)
+						
 			except:
 				pass
 
@@ -117,7 +121,12 @@ def uprank_relevance(keyword, url):
 
 # PART 6
 def query(keyword):
-	pass
+	if keyword in index:
+		return index[keyword]
 
 def rank_results(results):
 	pass
+
+# PART 7 (?)
+def get_domain_name(url):
+		return urlparse(url).netloc

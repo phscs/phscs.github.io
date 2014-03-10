@@ -1,14 +1,14 @@
 """
 TODO:
-	-put crawler on background thread to prevent blocking
-	-add crawl argument to force the crawler to stay on seed domain
 	-defensive programming in all user-facing functions (try / except)
 """
 
 import cherrypy as cp
 import search as se
+import thread
 
-se.crawl("index.html")
+this_domain_only = True
+thread.start_new_thread(se.crawl, ("index.html", this_domain_only))
 
 home = "<html>\
 	<body onLoad='document.search_form.query.focus()'>\
