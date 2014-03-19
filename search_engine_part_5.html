@@ -119,7 +119,6 @@
 	|
 	import urllib
 	import string
-	from sys import getsizeof
 
 	index = {}
 	popularity_index = {} ### here we create our new popularity index
@@ -136,8 +135,9 @@
 	def crawl(seed_page_url):
 			urls_to_crawl = [seed_page_url]
 			urls_already_crawled = []
+			crawls = 0
 
-			while len(urls_to_crawl) > 0 and getsizeof(index) < 536870912:
+			while len(urls_to_crawl) > 0 and crawls < 50:
 				url = urls_to_crawl[0]
 				source = urllib.urlopen(url).read()
 
@@ -153,6 +153,8 @@
 
 				urls_to_crawl.remove(url)
 				urls_already_crawled.append(url)
+
+				crawls += 1
 
 	### here are our two new functions
 	def uprank_popularity(url):
