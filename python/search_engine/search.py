@@ -102,3 +102,43 @@ def uprank_relevance(keyword, url):
 		for entry in index[keyword]:
 			if url == entry[0]:
 				entry[1] += 1
+
+def query(search_string):
+	# sanitize the input
+	sanitized_search_string = ""
+
+	for character in search_string:
+		if character not in string.punctuation:
+			sanitized_search_string += character.lower()
+
+	# break input along spaces
+	keywords = sanitized_search_string.split(" ")
+
+	# for each keyword, get its corresponding URLs from the index
+	urls = []
+
+	for keyword in keywords:
+		if keyword in index:
+			entries = index[keyword]
+	
+			for entry in entries:
+				if entry not in urls:
+					urls.append(entry)
+
+	# sort (NOTE: I'm listing all three possible sort functions
+	# because we haven't yet decided which one to use)
+	sorted_urls = sort_by_relevance(urls)
+	sorted_urls = sort_by_popularity(urls)
+	sorted_urls = sort_by_fancy_algorithm(urls)
+
+	# return
+	return sorted_urls
+	
+def sort_by_relevance(urls):
+	return urls
+	
+def sort_by_popularity(urls):
+	return urls
+	
+def sort_by_fancy_algorithm(urls):
+	return urls
