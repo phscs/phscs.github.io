@@ -1,18 +1,9 @@
-"""
-TODO:
-	-query function must rank results or call a ranking function
-	-databasing
-"""
-
 import urllib
 import string
-from urlparse import urlparse
-import pickledb
 
-index = pickledb.load("index.db", False)
-popularity_index = pickledb.load("popularity_index.db", False)
+index = {}
+popularity_index = {}
 
-# PART 1
 def get_links(source):
 	links = []
 	link_temp = ""
@@ -32,7 +23,6 @@ def get_links(source):
 
 	return links
 
-# PART 2
 def get_keywords(source):
 	collecting_characters = False
 	collected_characters = ""
@@ -61,28 +51,22 @@ def get_keywords(source):
 
 	return keywords
 
-# PART 3
 def add_to_index(url, keywords):
 	for keyword in keywords:
-		if index.get(keyword) == None:
-			index.set(keyword, [[url, 0]])
+		if keyword not in index:
+			index[keyword] = [[url, 0]]
 
 		else:
 			url_already_in_entry = False
 
-			for entry in index.get(keyword):
+			for entry in index[keyword]:
 				if url == entry[0]:
 					url_already_in_entry = True
 
 			if not url_already_in_entry:
-				index.get(keyword).append([url, 0])
+				index[keyword].append([url, 0])
 
-	index.dump()
-
-# PART 4
-def crawl(seed_page_url, this_domain_only):
-		index.deldb()
-		index.dump()
+def crawl(seed_page_url):
 		urls_to_crawl = [seed_page_url]
 		urls_already_crawled = []
 		crawls = 0
@@ -99,12 +83,7 @@ def crawl(seed_page_url, this_domain_only):
 
 				for link in links:
 					if link != url and link not in urls_already_crawled and link not in urls_to_crawl:
-						if this_domain_only:
-							if get_domain_name(link) == get_domain_name(seed_page_url):
-								urls_to_crawl.append(link)
-						else:
-							urls_to_crawl.append(link)
-
+						urls_to_crawl.append(link)
 			except:
 				pass
 
@@ -112,32 +91,14 @@ def crawl(seed_page_url, this_domain_only):
 			urls_already_crawled.append(url)
 			crawls += 1
 
-# PART 5
 def uprank_popularity(url):
-	if url in popularity_index.get(url):
-		popularity_index.set(url, popularity_index.get(url) + 1)
+	if url in popularity_index:
+		popularity_index[url] += 1
 	else:
-		popularity_index.set(url, 1)
-
-	popularity_index.dump()
+		popularity_index[url] = 1
 
 def uprank_relevance(keyword, url):
-	entries = index.get(keyword)
-
-	for entry in entries:
-		if url == entry[0]:
-			entry[1] += 1
-
-	index.set(keyword, entries)
-	index.dump()
-
-# PART 6
-def query(keyword):
-	return index.get(keyword)
-
-def rank_results(results):
-	pass
-
-# PART 7 (?)
-def get_domain_name(url):
-	return urlparse(url).netloc
+	if keyword in index:
+		for entry in index[keyword]:
+			if url == entry[0]:
+				entry[1] += 1
