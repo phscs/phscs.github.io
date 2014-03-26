@@ -1,0 +1,85 @@
+<html>
+<head>
+	<meta charset="UTF-8">
+	<link rel="stylesheet" type="text/css" href="style.css" />
+	<script src="jquery.js"></script>
+	<script src="markdown.js"></script>
+	<script src="syntax.js"></script>
+</head>
+<body>
+	<h1>Search Engine: Part 6</h1>
+
+	We're almost done! There's only one major step remaining!
+
+	<ul>
+		<li class="completed"><b>crawl</b> the web, which will involve:</li>
+		<ul style="list-style:circle">
+			<li class="completed">receiving a seed page's URL</li>
+			<li class="completed">downloading the contents (or _source code_) of the seed page</li>
+			<li class="completed">getting links out of the seed page's source code</li>
+			<li class="completed">getting keywords out of the seed page's source code</li>
+			<li class="completed">associating the keywords with the seed page's URL and storing those associations in an index</li>
+			<li class="completed">following all of the links from the seed page, and performing the above steps on them</li>
+		</ul>
+		<li class="completed"><b>rank</b> results as people click on them or as more pages link to them and then sort the index so that it returns the most highly-ranked results first</li>
+		<li class="checkBox"><b>return results</b> when someone searches for a keyword</li>
+	</ul>
+
+	Let's start by writing a basic query function. We'll tweak it as we go.
+
+	<span class="python">
+	|
+	def query(keyword):
+		if keyword in index:
+			return index[keyword]
+	|
+	</span>
+
+	If query for a keyword using this function, then we'll receive in return an array of arrays, like this: `[[URL, relevance], [URL, relevance], [URL, relevance], ...]]`. But this function isn't enough; there are three big pitfalls to avoid. 
+
+	First, this function assumes that the user will enter "clean" text, text without capitalization and punctuation. Since the keywords in our index contain neither capitalization or punctuation, then a query that contains either capital letters or punctuation marks will fail to return results. To handle this problem, we'll have to ~sanitize~ or ~validate~ (i.e., change the input to be clean/sane and valid) the end user's input before we can ask whether or not it's in our index. It's also important to remember that Python's strings are immutable, which means that we'll have to create a new string to contain the sanitized, validated text.
+
+	Second, this function assumes that the user will enter only one keyword into the search form. If the user queries for "apple," then our function has a fighting chance of returning some URLs. But if the user queries for "apple pie," then we have no chance of returning any results because of the fact that we designed our index to store only single words, not phrases. We'll attempt to fix this problem by breaking the query along spaces (just like we did in our `get_keywords()` function), getting the URLs from the index for each keyword, and then combining the results. One problem with this approach is that our final list of URLs is likely to contain duplicates. To prevent the possibility of returning duplicates, we'll make sure that each entry isn't already in the results list.
+
+	Third, this function assumes that neither we nor the users care about the order of the search results. But since we all _do_ care, we'll need to sort the results before returning them to the user. We'll need to decide whether to sort by relevance or popularity (or some combination of the two), and then we'll create a helper function to handle this for us.
+
+	Let's see how much of this we can write into the code in one go. Notice that I'm going to change the input from `keyword` to `search_string` in order to reflect our belief that the user may enter unclean input and/or multiple words.
+
+	<span class="python">
+	|
+	def query(search_string):
+		# sanitize the input
+		sanitized_search_string = ""
+
+		for character in search_string:
+			if character not in string.punctuation:
+				sanitized_search_string += character.lower()
+
+		# break input along spaces
+		keywords = sanitized_search_string.split(" ")
+
+		# for each keyword, get its corresponding URLs from the index
+		urls = []
+
+		for keyword in keywords:
+			if keyword in index:
+				entries = index[keyword]
+		
+				for entry in entries:
+					if entry not in urls:
+						urls.append(entry)
+
+		# sort (NOTE: I'm listing all three possible sort functions
+		# because we haven't yet decided which one to use)
+		sorted_urls = sort_by_relevance(urls)
+		sorted_urls = sort_by_popularity(urls)
+		sorted_urls = sort_by_fancy_algorithm(urls)
+
+		# return
+		return sorted_urls
+	|
+	</span>
+	
+	I tested it out, and this function works really well so far. Before we write our sort functions, I want to make one brief detour and discuss our process of combining the results for multiple keywords. Imagine that a user queries for "apple pie." 
+</body>
+</html>
