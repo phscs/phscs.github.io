@@ -123,23 +123,27 @@ def query(search_string):
 		if keyword in index:
 			results.append(index[keyword])
 
-	urls = []
+	if (len(results) != 0):
+		urls = []
 
-	for i in range(0, len(results)):
-		entry = results[i]
-		for url in entry:
-			in_other_entries = True
-			for other_entry in (results[:i] + results[i+1:]):
-				if url not in other_entry:
-					in_other_entries = False
-			if in_other_entries and url not in urls:
-				urls.append(url)
+		for i in range(0, len(results)):
+			entry = results[i]
+			for url in entry:
+				in_other_entries = True
+				for other_entry in (results[:i] + results[i+1:]):
+					if url not in other_entry:
+						in_other_entries = False
+				if in_other_entries and url not in urls:
+					urls.append(url)
 
-	# sort
-	sorted_urls = sort(urls)
+		# sort
+		sorted_urls = sort(urls)
 
-	# return
-	return sorted_urls
+		# return
+		return sorted_urls
+
+	else:
+		return ["No results found."]
 	
 def sort(urls):
 	# we'll start by calculating the overall scores for each URL
