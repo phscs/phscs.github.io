@@ -27,7 +27,7 @@
 	|
 	</span>
 
-	If query for a keyword using this function, then we'll receive in return an array of arrays, like this: `[[URL, relevance], [URL, relevance], [URL, relevance], ...]]`. And although this function is sufficient, there are three big pitfalls to avoid. 
+	If we query for a keyword using this function, then we'll receive in return an array of arrays, like this: `[[URL, relevance], [URL, relevance], [URL, relevance], ...]]`. And although this function is sufficient, there are three big pitfalls to avoid. 
 
 	First, this function assumes that the user will enter "clean" text, text without capitalization and punctuation. Since the keywords in our index contain neither capitalization or punctuation, then a query that contains either capital letters or punctuation marks will fail to return results. To handle this problem, we'll have to ~sanitize~ or ~validate~ (i.e., change the input to be clean/sane and valid) the end user's input before we can ask whether or not it's in our index. It's also important to remember that Python's strings are immutable, which means that we'll have to create a new string to contain the sanitized, validated text.
 
