@@ -12,16 +12,8 @@
 	We're almost done! There's only one major step remaining!
 
 	<ul>
-		<li class="completed"><b>crawl</b> the web, which will involve:</li>
-		<ul style="list-style:circle">
-			<li class="completed">receiving a seed page's URL</li>
-			<li class="completed">downloading the contents (or _source code_) of the seed page</li>
-			<li class="completed">getting links out of the seed page's source code</li>
-			<li class="completed">getting keywords out of the seed page's source code</li>
-			<li class="completed">associating the keywords with the seed page's URL and storing those associations in an index</li>
-			<li class="completed">following all of the links from the seed page, and performing the above steps on them</li>
-		</ul>
-		<li class="completed"><b>rank</b> results as people click on them or as more pages link to them and then sort the index so that it returns the most highly-ranked results first</li>
+		<li class="completed"><b>crawl</b> the web</li>
+		<li class="completed"><b>rank</b> results</li>
 		<li class="checkBox"><b>return results</b> when someone searches for a keyword</li>
 	</ul>
 
@@ -35,11 +27,11 @@
 	|
 	</span>
 
-	If query for a keyword using this function, then we'll receive in return an array of arrays, like this: `[[URL, relevance], [URL, relevance], [URL, relevance], ...]]`. But this function isn't enough; there are three big pitfalls to avoid. 
+	If query for a keyword using this function, then we'll receive in return an array of arrays, like this: `[[URL, relevance], [URL, relevance], [URL, relevance], ...]]`. And although this function is sufficient, there are three big pitfalls to avoid. 
 
 	First, this function assumes that the user will enter "clean" text, text without capitalization and punctuation. Since the keywords in our index contain neither capitalization or punctuation, then a query that contains either capital letters or punctuation marks will fail to return results. To handle this problem, we'll have to ~sanitize~ or ~validate~ (i.e., change the input to be clean/sane and valid) the end user's input before we can ask whether or not it's in our index. It's also important to remember that Python's strings are immutable, which means that we'll have to create a new string to contain the sanitized, validated text.
 
-	Second, this function assumes that the user will enter only one keyword into the search form. If the user queries for "apple," then our function has a fighting chance of returning some URLs. But if the user queries for "apple pie," then we have no chance of returning any results because of the fact that we designed our index to store only single words, not phrases. We'll attempt to fix this problem by breaking the query along spaces (just like we did in our `get_keywords()` function), getting the URLs from the index for each keyword, and then combining the results. One problem with this approach is that our final list of URLs is likely to contain duplicates. To prevent the possibility of returning duplicates, we'll make sure that each entry isn't already in the results list.
+	Second, this function assumes that the user will enter only one keyword into the search form. If the user queries for "apple," then our function has a fighting chance of returning some URLs. But if the user queries for "apple pie," then we have no chance of returning any results because of the fact that we designed our index to store only single words, not phrases. We'll attempt to fix this problem by breaking the query along spaces (just like we did in our `get_keywords()` function), getting the URLs from the index for each keyword, and then combining the results. One problem with this approach is that our final list of URLs is likely to contain duplicates. To prevent the possibility of returning duplicate URLs, we'll check to see whether it's already in our list of results before appending it.
 
 	Third, this function assumes that neither we nor the users care about the order of the search results. But since we all _do_ care, we'll need to sort the results before returning them to the user. We'll need to decide whether to sort by relevance or popularity (or some combination of the two), and then we'll create a helper function to handle this for us.
 
@@ -80,6 +72,108 @@
 	|
 	</span>
 	
-	I tested it out, and this function works really well so far. Before we write our sort functions, I want to make one brief detour and discuss our process of combining the results for multiple keywords. Imagine that a user queries for "apple pie." 
+	I tested this function out, and it works well so far. But before we go on to write our sort functions, I want to make one brief detour and discuss our process of combining the results for multiple keywords. Imagine that a user queries for "apple pie." Imagine that "apple" is associated with URLs 1, 2, and 3, and that "pie" is associated with URLs 2, 3, and 4. What URLs will our function currently return when a user queries for "apple pie"? It should return all four links (without duplicates): [1, 2, 3, 4]. But maybe the user was hoping for only the pages that contain _both_ words (specifically, he was hoping for pages 2 and 3). What should we do? Is it better to return a page if it contains _either_ "apple" _or_ "pie," or is it better to return the page only if it contains _both_ "apple" _and_ "pie"?
+
+	The ideas that we're discussing come from a part of mathematics called ~set theory~ (the theory of sets). The results returned from "apple" are one set, and the results returned from "pie" are a different set, and the question with which we're wrestling is how best to deal with the two sets. Should we return the ~union~ (a combination of all of the elements of the two sets) of the sets, or should we return the ~intersection~ (only those elements which are common to both sets) of the sets? Clearly, an intersection will almost always be a smaller list than a union; or, said another way, an intersection will probably be more specific than a union. And there are pitfalls in both directions. Imagine that we only returned unions. In such a case, we could imagine that someone only really wanted pages that talked about _both_ "apple" _and_ "pie," but we're returning to them (in addition to those pages) pages that could potentially contain "apple" but not "pie," or "pie" but not "apple." In such a case, users would have to dig through an unnecessarily large list of results to find their desired result. Conversely, we could imagine that we only returned intersections. Of course, it may be the case that we have some pages in our index for "apple" and some for "pie", but that none of those pages are in both lists (i.e., there are no pages that have _both_ "apple" _and_ "pie"). In such a case, our engine would return no results at all, which is a great disappointment to the end user.
+
+	The best thing to consider, probably, is what the user himself intends. Could it be the case that a user would query for "apple pie" but in his mind think, _Oh, I could be happy with results that have "apple" but not "pie," or "pie" but not "apple"_? To me, at least, this seems to be pretty unlikely. Most users probably don't want results that have _either_ "apple" _or_ "pie"; they want results that contain _both_ words! But, of course, if we only return unions, then we run the risk of returning too many results to the user. And if we only return intersections, then we run the risk of returning too few (or none) results to the user. 
+
+	Personally, I feel that Google handles this problem well. They return intersections and unions at the same time, but they put the intersections first. The goal, presumably, is that the user should get the most specific results first, followed by the less specific results (in case the first results were not desirable). You can try it for yourself: if you search Google for "apple pie" (without quotation marks) then your first results will probably contain pages on which "apple" and "pie" both appear. These results are followed by pages which contain either "apple" or "pie," but not both.
+
+	It's beginning to look as though something that started out as a detour is actually quite central and important to how we return results to the user. Therefore, I propose that we adjust our `query()` function so that it at least returns intersections, and maybe unions as well. As a quick reminder, an intersection means only those elements which are common to all sets; in code, then, we'll need to make sure that a particular URL is connected to _all_ of the queried keywords before we'll add it to the list of URLs to return.
+
+	<span class="python">
+	|
+	def query(search_string):
+		# sanitize the input
+		sanitized_search_string = ""
+
+		for character in search_string:
+			if character not in string.punctuation:
+				sanitized_search_string += character.lower()
+
+		# break input along spaces
+		keywords = sanitized_search_string.split(" ")
+
+		# for each keyword, get its corresponding URLs from the index
+		### now modified to return only intersections
+		results = []
+
+		for keyword in keywords:
+			if keyword in index:
+				results.append(index[keyword])
+
+		urls = []
+
+		for i in range(0, len(results)):
+			entry = results[i]
+			for url in entry:
+				in_other_entries = True
+				for other_entry in (results[:i] + results[i+1:]):
+					if url not in other_entry:
+						in_other_entries = False
+				if in_other_entries and url not in urls:
+					urls.append(url)
+
+		# sort (NOTE: I'm listing all three possible sort functions
+		# because we haven't yet decided which one to use)
+		sorted_urls = sort_by_relevance(urls)
+		sorted_urls = sort_by_popularity(urls)
+		sorted_urls = sort_by_fancy_algorithm(urls)
+
+		# return
+		return sorted_urls
+	|
+	</span>
+
+	That new code is a little convoluted, so make sure that you take the time to fully understand it before going on.
+
+	Now, we need to decide how we want to sort the results before returning them to users. Of course, we can always change this later, but my gut instinct is to try to combine relevance and popularity in some single algorithm (rather than sorting _only_ by relevance or _only_ by popularity). Ideally, of course, we want to return results that are both popular and relevant, and want to avoid results that are neither popular nor relevant. But in the event that we have to decide _between_ relevant results and popular results, what should we do?
+
+	Well, an initial stab at an algorithm is this: maybe we could just sum up the relevance and popularity numbers for each URL, and then rank the results according to that sum. This means, of course, checking in two places: our `index` and our `popularity_index`. So if a URL had a relevance of 3 and a popularity of 7, then its overall score would be 10. Of course, this opens us up to the possibility of returning bad results. For example, suppose that a particular URL _A_ had a relevance of 1 to a particular keyword and a popularity of 100. Its overall score (101) would be higher than a URL _B_ with relevance 20 and a popularity of 1 (overall score: 21). Even though _A_ is less relevant than _B_, it would be returned with a higher rank in the list than _B_ because of its higher score. There is almost certainly a fancy, complicated algorithm that could properly weight these results (in fact, it almost certainly involves machine learning, which is _waaaaaay_ outside the scope of these lessons), but this will probably be sufficient for our purposes.
+
+	I'll only add one tweak: maybe we could have two variables called `relevance_weight` and `popularity_weight`. We could multiply our relevances and popularities by these numbers to get our overall score, like this:
+
+	<span class="python">
+	|
+	relevance_weight = 1
+	popularity_weight = 1
+
+	overall_score = relevance_weight * relevance + popularity_weight * popularity
+	|
+	</span>
+
+	If we ever wanted to make relevance more weighty than popularity, we'd only need to bump up `relevance_weight` to a higher number.
+
+	In addition to finding an overall score for each URL, we need to implement the actual sorting process. To help us on our quest, Python has a built-in array function called `insert(i, x)`, which allows us to insert a thing _x_ into an array at position _i_. The actual sorting process will go like this. First, we'll create an empty array. Then, we'll start adding URLs to the array. As we add each URL, we'll go down the list until we find an element which has a _lower_ score than the current URL, and then we'll insert our current URL before the one with the lower score. When we're done, we'll return the list of URLs.
+
+	<span class="python">
+	|
+	def sort(urls):
+		# we'll start by calculating the overall scores for each URL
+		relevance_weight = 1
+		popularity_weight = 1
+
+		scored_urls = []
+
+		for url in urls:
+			score = url[1] + popularity_index[url[0]]
+			scored_urls.append([url[0], score])
+
+		# then we'll actually sort the URLs
+		sorted_urls = [scored_urls[0]]
+
+		for url in scored_urls:
+			for i in range(0, len(scored_urls)):
+				scored_url = scored_urls[i]
+				if url[1] > scored_url[1] and url not in sorted_urls:
+					sorted_urls.insert(i, url)
+
+			if url not in sorted_urls:
+				sorted_urls.append(url)
+
+		return sorted_urls
+	|
+	</span>
 </body>
 </html>

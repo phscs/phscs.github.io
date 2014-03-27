@@ -82,6 +82,7 @@ def crawl(seed_page_url):
 				links = get_links(source)
 
 				for link in links:
+					uprank_popularity(link)
 					if link != url and link not in urls_already_crawled and link not in urls_to_crawl:
 						urls_to_crawl.append(link)
 			except:
@@ -115,30 +116,52 @@ def query(search_string):
 	keywords = sanitized_search_string.split(" ")
 
 	# for each keyword, get its corresponding URLs from the index
-	urls = []
+	# now modified to return only intersections
+	results = []
 
 	for keyword in keywords:
 		if keyword in index:
-			entries = index[keyword]
-	
-			for entry in entries:
-				if entry not in urls:
-					urls.append(entry)
+			results.append(index[keyword])
 
-	# sort (NOTE: I'm listing all three possible sort functions
-	# because we haven't yet decided which one to use)
-	sorted_urls = sort_by_relevance(urls)
-	sorted_urls = sort_by_popularity(urls)
-	sorted_urls = sort_by_fancy_algorithm(urls)
+	urls = []
+
+	for i in range(0, len(results)):
+		entry = results[i]
+		for url in entry:
+			in_other_entries = True
+			for other_entry in (results[:i] + results[i+1:]):
+				if url not in other_entry:
+					in_other_entries = False
+			if in_other_entries and url not in urls:
+				urls.append(url)
+
+	# sort
+	sorted_urls = sort(urls)
 
 	# return
 	return sorted_urls
 	
-def sort_by_relevance(urls):
-	return urls
-	
-def sort_by_popularity(urls):
-	return urls
-	
-def sort_by_fancy_algorithm(urls):
-	return urls
+def sort(urls):
+	# we'll start by calculating the overall scores for each URL
+	relevance_weight = 1
+	popularity_weight = 1
+
+	scored_urls = []
+
+	for url in urls:
+		score = url[1] + popularity_index[url[0]]
+		scored_urls.append([url[0], score])
+
+	# then we'll actually sort the URLs
+	sorted_urls = [scored_urls[0]]
+
+	for url in scored_urls:
+		for i in range(0, len(scored_urls)):
+			scored_url = scored_urls[i]
+			if url[1] > scored_url[1] and url not in sorted_urls:
+				sorted_urls.insert(i, url)
+
+		if url not in sorted_urls:
+			sorted_urls.append(url)
+
+	return sorted_urls
