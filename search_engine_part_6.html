@@ -61,14 +61,18 @@
 					if entry not in urls:
 						urls.append(entry)
 
-		# sort (NOTE: I'm listing all three possible sort functions
-		# because we haven't yet decided which one to use)
-		sorted_urls = sort_by_relevance(urls)
-		sorted_urls = sort_by_popularity(urls)
-		sorted_urls = sort_by_fancy_algorithm(urls)
+		if (len(urls) != 0):
+			# sort (NOTE: I'm listing all three possible sort functions
+			# because we haven't yet decided which one to use)
+			sorted_urls = sort_by_relevance(urls)
+			sorted_urls = sort_by_popularity(urls)
+			sorted_urls = sort_by_fancy_algorithm(urls)
 
-		# return
-		return sorted_urls
+			# return
+			return sorted_urls
+
+		else:
+			return ["No results found."]
 	|
 	</span>
 	
