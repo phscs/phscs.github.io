@@ -1,0 +1,39 @@
+<html>
+<head>
+	<meta charset="UTF-8">
+	<link rel="stylesheet" type="text/css" href="style.css" />
+	<script src="jquery.js"></script>
+	<script src="markdown.js"></script>
+	<script src="syntax.js"></script>
+</head>
+<body>
+	<h1>Search Engine: Part 7</h1>
+
+	We've already completed the core of our search engine, and now it's time to add some bells and whistles. In this lesson, we'll move the indices (`index` and `popularity_index`) out of variables (temporary storage) and into a ~database~ (permanent storage). Just as programming is but one large branch of computer science, so databasing is also such a branch; and just as we could spend an entire semester on programming, we could equally spend an entire semester on databasing. But we probably won't need to know everything about databases for the purposes of our little search engine; instead, we'll just cover the necessary topics and leave the rest for another time.
+
+	Of course, we've built many of our engine's functions around our use of Python's dictionaries for storing URLs and keywords and the like, so we'll have to modify those functions to accommodate database functions. Python can interoperate with many popular database management systems (DBMSes). These DBMSes provide various ways of storing and accessing data. There are four basic types of DBMSes: _relational_, _network_, _flat_, and _heirarchical_. For the sake of simplicity, we'll use a flat database (i.e., a database that is written to a single, flat file, and in which there are no structural relationships between the records). Flat databases tend to suffer from performance problems at large scale, but the benefit of using a flat database is its ease of use, which fits us well for now. 
+
+	Some nice people have already written a flat DBMS for Python called <a href="https://pythonhosted.org/pickleDB/" target="blank">PickleDB</a>. PickleDB is super easy to use. All we have to do is install it, `import` it, load up our flat database file, and go to town. And the nice thing is that we'll really only need to know three main methods: `set()`, `dump()`, and `get()`. The first one, `set()` prepares the program to insert a key-value pair into the database. The second one, `dump()` actually saves the key-value pairs from `set()` to the database file. And `get()` retrieves a value from the database, given a particular key. 
+
+	To get PickleDB from an Ubuntu-based Linux distro, execute the following commands from the command line.
+
+	|
+	sudo apt-get update
+	sudo apt-get install python-pip
+	pip install pickledb
+	|
+
+	Now that PickleDB is installed, we just need to import it into our `search.py` file and modify the relevant functions. At the top of our `search.py` file, we need to add our `import` statement and load up a new database file. I'm pretty sure that we'll need separate database files for our two indices.
+
+	<span class="python">
+	|
+	import pickledb
+
+	index = pickldb.load("index.db", False)
+	popularity_index = pickledb.load("popularity_index.db", False)
+	|
+	</span>
+
+	Next, we need to hunt through our code and replace all instances of `index[some_keyword] = some_value` (the value-setting function) with `index.set(some_keyword, some_value)`. Before those functions exit, too, we need to make sure to call `index.dump()` to ensure that our changes are written to disk. We also need to replace all other instances of `index[some_keyword]` (the value-getting function) with `index.get(some_keyword)`. We'll need to make all the same changes again for functions that reference `popularity_index`. 
+</body>
+</html>
