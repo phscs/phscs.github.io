@@ -1,8 +1,12 @@
 import urllib
 import string
+import pickledb
 
-index = {}
-popularity_index = {}
+index = pickledb.load("index.db", False)
+popularity_index = pickledb.load("popularity_index.db", False)
+
+index.deldb()
+popularity_index.deldb()
 
 def get_links(source):
 	links = []
@@ -53,18 +57,15 @@ def get_keywords(source):
 
 def add_to_index(url, keywords):
 	for keyword in keywords:
-		if keyword not in index:
-			index[keyword] = [[url, 0]]
+		urls = index.get(keyword)
 
+		if urls == None:
+			index.set(keyword, [[url, 0]])
 		else:
-			url_already_in_entry = False
+			urls.append([url, 0])
+			index.set(keyword, urls)
 
-			for entry in index[keyword]:
-				if url == entry[0]:
-					url_already_in_entry = True
-
-			if not url_already_in_entry:
-				index[keyword].append([url, 0])
+		index.dump()
 
 def crawl(seed_page_url):
 		urls_to_crawl = [seed_page_url]
@@ -93,16 +94,25 @@ def crawl(seed_page_url):
 			crawls += 1
 
 def uprank_popularity(url):
-	if url in popularity_index:
-		popularity_index[url] += 1
+	popularity = popularity_index.get(url)
+
+	if popularity == None:
+		popularity = 0
 	else:
-		popularity_index[url] = 1
+		popularity += 1
+
+	popularity_index.set(url, popularity)
+	popularity_index.dump()
 
 def uprank_relevance(keyword, url):
-	if keyword in index:
-		for entry in index[keyword]:
-			if url == entry[0]:
-				entry[1] += 1
+	urls = index.get(keyword)
+
+	for entry in urls:
+		if url == entry[0]:
+			entry[1] += 1
+
+	index.set(keyword, urls)
+	index.dump()
 
 def query(search_string):
 	# sanitize the input
@@ -120,22 +130,23 @@ def query(search_string):
 	results = []
 
 	for keyword in keywords:
-		if keyword in index:
-			results.append(index[keyword])
+		urls = index.get(keyword)
+		if urls != None:
+			results.append(urls)
 
-	if (len(results) != 0):
-		urls = []
+	urls = []
 
-		for i in range(0, len(results)):
-			entry = results[i]
-			for url in entry:
-				in_other_entries = True
-				for other_entry in (results[:i] + results[i+1:]):
-					if url not in other_entry:
-						in_other_entries = False
-				if in_other_entries and url not in urls:
-					urls.append(url)
+	for i in range(0, len(results)):
+		entry = results[i]
+		for url in entry:
+			in_other_entries = True
+			for other_entry in (results[:i] + results[i+1:]):
+				if url not in other_entry:
+					in_other_entries = False
+			if in_other_entries and url not in urls:
+				urls.append(url)
 
+	if len(urls) != 0:
 		# sort
 		sorted_urls = sort(urls)
 
@@ -144,7 +155,7 @@ def query(search_string):
 
 	else:
 		return ["No results found."]
-	
+
 def sort(urls):
 	# we'll start by calculating the overall scores for each URL
 	relevance_weight = 1
@@ -153,7 +164,7 @@ def sort(urls):
 	scored_urls = []
 
 	for url in urls:
-		score = url[1] + popularity_index[url[0]]
+		score = url[1] + popularity_index.get(url[0])
 		scored_urls.append([url[0], score])
 
 	# then we'll actually sort the URLs
