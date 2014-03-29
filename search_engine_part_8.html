@@ -1,0 +1,125 @@
+<html>
+<head>
+	<meta charset="UTF-8">
+	<link rel="stylesheet" type="text/css" href="style.css" />
+	<script src="jquery.js"></script>
+	<script src="markdown.js"></script>
+	<script src="syntax.js"></script>
+</head>
+<body>
+	<h1>Search Engine: Part 8</h1>
+
+	In this lesson, we'll create a web ~front-end~ (the client-side part of our program) and ~back-end~ (the server-side part of our program) for our search engine. In my opinion, this is one of the most exciting steps in our project, since it finally allows us to showcase our project in a way that other people can see and use it. Here's a word of warning: this lesson will most likely be pretty long because we haven't yet spent much time talking about web technologies. Understanding these technologies will require lots of explanations as we go.
+
+	Any web application (of which our search engine is an example) will involve a conversation between two parties: the ~client~ (the party requesting information, such as an end user and/or an end user's web browser) and the ~server~ (the party giving out information, such as a remote computer that hosts a relevant program). We've already seen how to write Python functions and how to pass arguments into those functions. When writing web apps, you create your program on the expectation that you won't be the only person passing arguments into those functions, but in fact that users from all over the world could potentially want to pass in arguments and get results. The problem, then, is this: how do you get input from those users? It's simple enough for _you_ to give input; you're already sitting at the computer running the program. But if we want input from others, then we need to create a protocol for accepting input.
+
+	~Web servers~ give us such protocols. Web servers _basically_ operate like this: they allow a computer to "listen" for incoming requests and to respond to those requests appropriately. In other words, when a client connects to a server and requests certain information, the server gets the requested information and passes it back to the client. If the client wishes to pass arguments to a function on the server, then the client passes in that information along with the request, and then the server takes the arguments, passes them to the relevant program, receives the results from the program, and passes them back to the user. There are all kinds of web servers out there, and you've probably heard of some of them: Apache, nginx, Microsoft-IIS, LiteSpeed, Tomcat, Lighttpd, and others.
+
+	Web servers are designed to be highly configurable, meaning that server administrators are allowed to customize the way that the server responds to requests both in terms of security (blocking requests on certain ports or from certain locations or to certain system resources) and extensibility (connecting to other system resources, such as Python and Python programs). But for web servers to be able to talk with these other system resources, they usually need a "bridge" or "interface" by means of which they can talk to the resource, and which is usually provided by the system resource itself. After all, it'd be nearly impossible for a web server to know how to talk with _any_ system resource since resources are always being created. No, it's got to be the case that the resources themselves provide the bridge through which the server can talk to them. ~WSGI~ -- the Web Server Gateway Interface -- is a specification that outlines someone can create a simple and universal bridge / interface between any web server and a resource. Python programmers have created many, many WSGI-compliant bridges that allow Python to talk with web servers, which means that we'll have plenty of options to choose from when it comes to building our web app.
+
+	In addition to web servers, programmers often incorporate ~web frameworks~ into their workflow. Web frameworks handle most of the "heavy lifting" for the programmer and allow them to focus more on their program instead of on the process of customizing a web server and setting up the bridge between the program and the server. Again, Python programmers have been hard at work creating web frameworks that allow programmers like ourselves to focus more on our program than on configuring a web server and bridge. I looked at a lot of the current Python web frameworks, and the one that I liked the best was <a href="http://www.cherrypy.org/" target="_blank">CherryPy</a>. CherryPy claims to be "a minimalist Python web framework," and I believe that it delivers on its claim. CherryPy will allow us to connect our program to the world wide web with a minimum of fuss.
+
+	Similar to how we had to download, install, and import PickleDB, we need to do the same thing with CherryPy (since neither come preinstalled as part of Python). Run the following command from the command line (not from the Python shell).
+
+	|
+	pip install cherrypy
+	|
+
+	Once CherryPy is installed, we need to begin building our web back-end. Instead of adding stuff to our large `search.py` file, I think that it's time to branch out and create a new file in which we'll keep all of our web-server-related stuff: `web.py` (make sure to put it in the same directory as `search.py`). What should we put in our `web.py` file? Well, let's take a quick gander at the example given on the CherryPy home page.
+
+	<span class="python">
+	|
+	import cherrypy
+
+	class HelloWorld(object):
+		def index(self):
+			return "Hello, world!"
+		index.exposed = True
+
+	cherrypy.quickstart(HelloWorld())
+	|
+	</span>
+
+	Let's unpack this code. First, they import the CherryPy library. Then, they create a class called `HelloWorld(object)`. If you read <a href="http://phscs.github.io/classes.html" target="_blank">our lesson on Python classes</a>, then you'll recall that the stuff in parentheses (`(object)`) is the superclass of `HelloWorld`. In other words, the `HelloWorld` class will automatically inherit methods and attributes from the `object` class. Inside of the `HelloWorld` class, then, we see a single function definition: `index(self)`. You may recall that class functions are called _methods_, and that they always require that `self` be passed as their first argument. In the case of this example, this method only returns some text. Then, we're shown that the `index()` method actually has an attribute called `exposed`, which is set to `True`. This attribute determines whether the method is available to the public or not. (We'll discuss this particular attribute more in a moment.) Last, the `cherrypy.quickstart(HelloWorld())` call launches a simple web server using the new `HelloWorld` class. You should try this code out; it really works. Copy this code into `web.py`, save the file, and then run the following from the command line.
+
+	<span class="python">
+	|
+	python web.py
+	|
+	</span>
+
+	If everything was properly installed, then the web server should start correctly, and you should be able to navigate to <a href="http://localhost:8080/" target="_blank">http://localhost:8080/</a> in your browser, at which point you'll be greeted by the text "Hello, world!"!
+
+	You might've been wondering something just now. You might have wondered, "Why has the method been named `index()`? Could it have been given some other name?" Good question. The name `index()` is reserved as the "root" function for the website. In other words, if someone simply navigates to <a href="http://localhost:8080/" target="_blank">http://localhost:8080/</a>, without anything after it, then CherryPy calls for the `index()` function. But it's possible to create other functions, and then to call them by appending their names to <a href="http://localhost:8080/" target="_blank">http://localhost:8080/</a>. For instance:
+
+	<span class="python">
+	|
+	class HelloWorld(object):
+		def index(self):
+			return "Hello, world!"
+		index.exposed = True
+
+		def foo(self):
+			return "bar"
+		foo.exposed = True
+	|
+	</span>
+
+	If we navigate to <a href="http://localhost:8080/foo" target="_blank">http://localhost:8080/foo</a> in the browser, we're greeted by "bar"! Yay! This is important for our search engine because we need to provide basically two pages for our users: a "home" page (i.e., the "root" or `index()` page) that shows a search form in which users can type and submit a query, and a "results" page (i.e., a page that shows the stuff returned from the `query()` function).
+
+	And now I need to make another digression. I said a moment ago that I wanted to talk more about the `exposed` attribute for methods in CherryPy. This is actually really important. Exposing certain methods to the public (i.e., allowing the public to call those methods) can be both useful and dangerous. On the one hand, we want users to be able to call certain methods remotely (like our `query()` function). On the other hand, we _don't_ want users to be able to call other certain methods remotely (like our `add_to_index()` or `uprank_popularity()` functions -- or most of our other functions, for that matter). When we expose certain methods for public use, we're creating an ~API~, an Application Programming Interface. Many popular web apps and services expose APIs for programmers' use. These APIs allow programmers to create cool programs that use those apps and services.
+
+	For example, Twitter exposes an API for public use. Of course, Twitter almost certainly has lots of functions that it _doesn't_ expose for public use because of security concerns, but the public API is still useful because programmers can use it to do all kinds of things. We could imagine writing a program that would plot the locations of tweets containing #justinbieber on a map of the world. In such a program, we'd have to use the Twitter API to query for tweets that contain that particular hashtag.
+
+	Okay, with all of those things in mind, let's see if we can write new `web.py` in pseudo-code.
+
+	<span class="python">
+	|
+	import cherrypy
+
+	class SE(object):
+		def index(self):
+			return a search form
+		index.exposed = True
+
+		def q(self, search_string):
+			return the results of query(search_string)
+		q.exposed = True
+
+	cherrypy.quickstart(SE())
+	|
+	</span>
+
+	Good. One obvious problem, though, is that this program won't currently understand what we mean by `query(search_string)`. It doesn't have any connection with our search engine, so how _could_ it understand what we mean? To connect `web.py` to `search.py`, we simply have to import the latter.
+
+	<span class="python">
+	|
+	import cherrypy
+	import search
+
+	class SE(object):
+		def index(self):
+			return a search form # this is the only line of pseudo-code!
+		index.exposed = True
+
+		def q(self, search_string):
+			return search.query(search_string) # notice the syntax here
+		q.exposed = True
+
+	cherrypy.quickstart(SE())
+	|
+	</span>
+
+	Notice the syntax when I called the `query()` function; I actually called it as `search.query()`. If you're familiar with classes, you might be thinking that the "dot" notation indicates a method call from a class, and you might be confused about the fact that `search` isn't really a class -- and you're right. It's not a class, but it _is_ a ~namespace~. Namespaces are mappings of names to objects. Namespaces are very similar to classes. In fact, when a class is read into the interpreter, a new namespace is created. Then, when you want to call methods from that namespace, you use the "dot" notation. So, although `search` is _not_ a class, it _is_ a namespace, and namespace method calls require use of "dot" notation. Since classes generate namespaces, this is also why class method calls require use of "dot" notation.
+
+	Our last step, then is to figure out what to return as a search form in our `index()` method. The form that we'll return must be written in HTML. Here's a possible HTML form.
+
+	|
+	<html>
+	<body>
+		<form action=
+	</body>
+	</html>
+	|
+</body>
+</html>
