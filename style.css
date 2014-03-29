@@ -5,6 +5,11 @@ body {
 	text-align:justify;
 }
 
+div {
+	margin:0;
+	padding:0;
+}
+
 .inline-code {
 	font-family:monospace;
 	margin:0;
@@ -12,6 +17,7 @@ body {
 }
 
 .block-code {
+	clear:both;
 	background-color:#e8e8e8;
 	color:#333333;
 	font-family:monospace;
@@ -131,6 +137,33 @@ li.checkBox {
 	-moz-box-shadow: 0.1em 0.1em 0.1em gray;
 	-webkit-box-shadow: 0.1em 0.1em 0.1em gray;
 	*/
+}
+
+.expandbutton {
+	background-color:#66A3C2;
+	color:white;
+	padding:0.5em;
+	margin:0 0 1.5em 0;
+	text-align:center;
+	float:left;
+	border-radius:0.25em;
+	-moz-border-radius:0.25em;
+	-webkit-border-radius:0.25em;
+	box-shadow: 0.1em 0.1em 0.1em gray;
+	-moz-box-shadow: 0.1em 0.1em 0.1em gray;
+	-webkit-box-shadow: 0.1em 0.1em 0.1em gray;
+	cursor:pointer;
+}
+
+.plusminus {
+	font-family:monospace;
+	margin:0;
+	padding:0.2em 0.5em 0.2em 0.5em;
+	background-color:white;
+	color:#b8b8b8;
+	border-radius:0.25em;
+	-moz-border-radius:0.25em;
+	-webkit-border-radius:0.25em;
 }
 
 @media print {

@@ -5,17 +5,36 @@
 	<script src="jquery.js"></script>
 	<script src="markdown.js"></script>
 	<script src="syntax.js"></script>
+	<script>
+		toggled = true;
+
+		$(document).ready(function(){
+			$(".expandable").hide();
+		});
+
+		function expand(button, element){
+			if ($(button).children().text() == "+"){
+				$(button).children().text("-");
+				$(button).css("margin", "0 0 0.5em 0");
+			} else {
+				$(button).children().text("+");
+				$(button).css("margin", "0 0 1.5em 0");
+			};
+
+			$(element).toggle();
+		};
+	</script>
 </head>
 <body>
 	<h1>Search Engine: Part 7</h1>
 
 	We've already completed the core of our search engine, and now it's time to add some bells and whistles. In this lesson, we'll move the indices (`index` and `popularity_index`) out of variables (temporary storage) and into a ~database~ (permanent storage). Just as programming is but one large branch of computer science, so databasing is also such a branch; and just as we could spend an entire semester on programming, we could equally spend an entire semester on databasing. But we probably won't need to know everything about databases for the purposes of our little search engine; instead, we'll just cover the necessary topics and leave the rest for another time.
 
-	Of course, we've built many of our engine's functions around our use of Python's dictionaries for storing URLs and keywords and the like, so we'll have to modify those functions to accommodate database functions. Python can interoperate with many popular database management systems (DBMSes). These DBMSes provide various ways of storing and accessing data. There are four basic types of DBMSes: _relational_, _network_, _flat_, and _heirarchical_. For the sake of simplicity, we'll use a flat database (i.e., a database that is written to a single, flat file, and in which there are no structural relationships between the records). Flat databases tend to suffer from performance problems at large scale, but the benefit of using a flat database is its ease of use, which fits us well for now. 
+	Of course, we've built many of our engine's functions around our use of Python's dictionaries for storing URLs and keywords and the like, so we'll have to modify those functions to accommodate database functions. Python can interoperate with many popular database management systems (DBMSes). These DBMSes provide various ways of storing and accessing data. There are four basic types of DBMSes: _relational_, _network_, _flat_, and _heirarchical_. For the sake of simplicity, we'll use a flat database (i.e., a database that is written to a single, flat file, and in which there are no structural relationships between the records). Flat databases tend to suffer from performance problems at large scale, but the benefit of using a flat database is its ease of use, which fits us well for now.
 
-	Some nice people have already written a flat DBMS for Python called <a href="https://pythonhosted.org/pickleDB/" target="blank">PickleDB</a>. PickleDB is super easy to use. All we have to do is install it, `import` it, load up our flat database file, and go to town. And the nice thing is that we'll really only need to know three main methods: `set()`, `dump()`, and `get()`. The first one, `set()` prepares the program to insert a key-value pair into the database. The second one, `dump()` actually saves the key-value pairs from `set()` to the database file. And `get()` retrieves a value from the database, given a particular key. 
+	Some nice people have already written a flat DBMS for Python called <a href="https://pythonhosted.org/pickleDB/" target="blank">PickleDB</a>. PickleDB is super easy to use. All we have to do is install it, `import` it, load up our flat database file, and go to town. And the nice thing is that we'll really only need to know three main methods: `set()`, `dump()`, and `get()`. The first one, `set()` prepares the program to insert a key-value pair into the database. The second one, `dump()` actually saves the key-value pairs from `set()` to the database file. And `get()` retrieves a value from the database, given a particular key.
 
-	To get PickleDB from an Ubuntu-based Linux distro, execute the following commands from the command line.
+	To get PickleDB from an Ubuntu-based Linux distro (such as Linux Mint), execute the following commands from the command line (NOTE: the regular, old command line, not the Python shell).
 
 	|
 	sudo apt-get update
@@ -23,17 +42,215 @@
 	pip install pickledb
 	|
 
-	Now that PickleDB is installed, we just need to import it into our `search.py` file and modify the relevant functions. At the top of our `search.py` file, we need to add our `import` statement and load up a new database file. I'm pretty sure that we'll need separate database files for our two indices.
+	Now that PickleDB is installed, we just need to import it into our `search.py` file and modify the relevant functions. At the top of our `search.py` file, we need to add our `import` statement and load up a new database file. I'm pretty sure that we'll need separate database files for our two indices. I'm also going to add a statement that will clear out the databases each time that the file is loaded.
 
 	<span class="python">
 	|
 	import pickledb
 
+	# load the indices (and create them if they don't exist)
 	index = pickldb.load("index.db", False)
 	popularity_index = pickledb.load("popularity_index.db", False)
+
+	# clear out the indices
+	index.deldb()
+	popularity_index.deldb()
 	|
 	</span>
 
-	Next, we need to hunt through our code and replace all instances of `index[some_keyword] = some_value` (the value-setting function) with `index.set(some_keyword, some_value)`. Before those functions exit, too, we need to make sure to call `index.dump()` to ensure that our changes are written to disk. We also need to replace all other instances of `index[some_keyword]` (the value-getting function) with `index.get(some_keyword)`. We'll need to make all the same changes again for functions that reference `popularity_index`. 
+	Next, we need to hunt through our code and replace all references to `index` and `popularity_index` with the new PickleDB methods. Any assignments -- like `index[some_keyword] = some_value` -- need to be replaced with method calls -- like `index.set(some_keyword, some_value)`. Of course, it's not quite as simple as all that; after all, we had lots of conditional `in` statements, like `if keyword in index:`, etc. We can no longer make such conditional statements in this form because the new `index` isn't iterable in the usual sense.
+
+	Here's the newly completed `search.py` file. I've tried to put a little yellow tab beside each of the new changes. Note that, even though I've only highlighted lines where PickleDB is referenced directly, there were other changes made to the relevant functions as well. Please look over _all_ of the code and make sure that you feel comfortable with it.
+
+
+	<div class="expandbutton" onClick="javascript:expand(this, $('#searchpy'));">click to show/hide the complete search.py file <span class="plusminus">+</span></div>
+	<div style="clear:both"></div>
+	<span class="python expandable" id="searchpy">
+	|
+	import urllib
+	import string
+	import pickledb
+
+	### new PickleDB stuff
+	index = pickledb.load("index.db", False) #
+	popularity_index = pickledb.load("popularity_index.db", False) #
+
+	index.deldb() #
+	popularity_index.deldb() #
+
+	### get links
+	def get_links(source):
+		links = []
+		link_temp = ""
+		collecting_characters = False
+
+		for i in range(0, len(source)):
+			if source[i-6 : i] == 'href="' or source[i-6 : i] == "href='":
+				collecting_characters = True
+
+			if collecting_characters:
+				if source[i] == '"' or source[i] == "'":
+					collecting_characters = False
+					links.append(link_temp)
+					link_temp = ""
+				else:
+					link_temp = link_temp + source[i]
+
+		return links
+
+	### get keywords
+	def get_keywords(source):
+		collecting_characters = False
+		collected_characters = ""
+
+		for i in range(0, len(source)):
+			character = source[i]
+
+			if character == "<":
+				collecting_characters = False
+			elif character == ">":
+				collecting_characters = True
+			elif collecting_characters:
+				if character in string.punctuation or character in ["\t","\n","\r"]:
+					collected_characters += " "
+				else:
+					collected_characters += character.lower()
+
+		keywords = collected_characters.split(" ")
+
+		while "" in keywords:
+			keywords.remove("")
+
+		for word in keywords:
+			if word in keywords[keywords.index(word)+1:]:
+				keywords.remove(word)
+
+		return keywords
+
+	### add to index
+	def add_to_index(url, keywords):
+		for keyword in keywords:
+			urls = index.get(keyword) #
+
+			if urls == None:
+				index.set(keyword, [[url, 0]]) #
+			else:
+				urls.append([url, 0]) #
+				index.set(keyword, urls) #
+
+			index.dump() #
+
+	### crawl
+	def crawl(seed_page_url):
+			urls_to_crawl = [seed_page_url]
+			urls_already_crawled = []
+			crawls = 0
+
+			while len(urls_to_crawl) > 0 and crawls < 50:
+				try:
+					url = urls_to_crawl[0]
+					source = urllib.urlopen(url).read()
+
+					keywords = get_keywords(source)
+					add_to_index(url, keywords)
+
+					links = get_links(source)
+
+					for link in links:
+						uprank_popularity(link)
+						if link != url and link not in urls_already_crawled and link not in urls_to_crawl:
+							urls_to_crawl.append(link)
+				except:
+					pass
+
+				urls_to_crawl.remove(url)
+				urls_already_crawled.append(url)
+				crawls += 1
+
+	### uprank popularity
+	def uprank_popularity(url):
+		popularity = popularity_index.get(url) #
+
+		if popularity == None:
+			popularity = 0
+		else:
+			popularity += 1
+
+		popularity_index.set(url, popularity) #
+		popularity_index.dump() #
+
+	### uprank relevance
+	def uprank_relevance(keyword, url):
+		urls = index.get(keyword) #
+
+		for entry in urls:
+			if url == entry[0]:
+				entry[1] += 1
+
+		index.set(keyword, urls) #
+		index.dump() #
+
+	### query
+	def query(search_string):
+		sanitized_search_string = ""
+
+		for character in search_string:
+			if character not in string.punctuation:
+				sanitized_search_string += character.lower()
+
+		keywords = sanitized_search_string.split(" ")
+
+		results = []
+
+		for keyword in keywords:
+			urls = index.get(keyword) #
+			if urls != None:
+				results.append(urls)
+
+		urls = []
+
+		for i in range(0, len(results)):
+			entry = results[i]
+			for url in entry:
+				in_other_entries = True
+				for other_entry in (results[:i] + results[i+1:]):
+					if url not in other_entry:
+						in_other_entries = False
+				if in_other_entries and url not in urls:
+					urls.append(url)
+
+		if len(urls) != 0:
+			sorted_urls = sort(urls)
+			return sorted_urls
+
+		else:
+			return ["No results found."]
+
+	### sort
+	def sort(urls):
+		relevance_weight = 1
+		popularity_weight = 1
+
+		scored_urls = []
+
+		for url in urls:
+			score = url[1] + popularity_index.get(url[0]) #
+			scored_urls.append([url[0], score])
+
+		sorted_urls = [scored_urls[0]]
+
+		for url in scored_urls:
+			for i in range(0, len(scored_urls)):
+				scored_url = scored_urls[i]
+				if url[1] > scored_url[1] and url not in sorted_urls:
+					sorted_urls.insert(i, url)
+
+			if url not in sorted_urls:
+				sorted_urls.append(url)
+
+		return sorted_urls
+
+	|
+	</span>
 </body>
 </html>
