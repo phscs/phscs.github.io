@@ -166,6 +166,18 @@ li.checkBox {
 	-webkit-border-radius:0.25em;
 }
 
+.example {
+	margin:1.5em 0 1.5em 0;
+	padding:0em 1em 2em 1em;
+	border-radius:0.25em;
+	-moz-border-radius:0.25em;
+	-webkit-border-radius:0.25em;
+	border:2px solid orange;
+	box-shadow: 0.1em 0.1em 0.1em gray;
+	-moz-box-shadow: 0.1em 0.1em 0.1em gray;
+	-webkit-box-shadow: 0.1em 0.1em 0.1em gray;
+}
+
 @media print {
 	body {
 		margin:0;
