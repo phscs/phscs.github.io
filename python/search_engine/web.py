@@ -2,7 +2,7 @@ import cherrypy
 import search
 import thread
 
-thread.start_new_thread(search.crawl, ("index.html",))
+thread.start_new_thread(search.crawl, ("http://premiergranbury.com/",))
 
 form = "<html> \
 	<body> \
@@ -24,7 +24,7 @@ class SE(object):
 		if urls != ["No results found."]:
 			results += "<ul>"
 			for url in urls:
-				results += "<li><a href='"  + url[0] + "'>" + url[0] + "</a></li>"
+				results += "<li>[" + str(url[1]) + "] <a href='"  + url[0] + "'>" + url[0] + "</a></li>"
 			results += "</ul></body></html>"
 		else:
 			results += "No results found."
