@@ -1,19 +1,20 @@
 import cherrypy
 import search
+import thread
 
-search.crawl("index.html")
+thread.start_new_thread(search.crawl, ("index.html",))
 
 form = "<html> \
-		<body> \
-			<h3>Search Engine</h3> \
-			<form action='q' method='get'> \
-				<input type='text' name='search_string'> \
-				<input type='submit' value='Submit'> \
-			</form> \
-		</body> \
-		</html>"
+	<body> \
+		<h3>Search Engine</h3> \
+		<form action='q' method='get'> \
+			<input type='text' name='search_string'> \
+			<input type='submit' value='Submit'> \
+		</form> \
+	</body> \
+	</html>"
 
-class HelloWorld(object):
+class SE(object):
 	def index(self):
 		return form
 
@@ -34,4 +35,4 @@ class HelloWorld(object):
 	index.exposed = True
 	q.exposed = True
 
-cherrypy.quickstart(HelloWorld())
+cherrypy.quickstart(SE())
