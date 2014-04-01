@@ -159,7 +159,7 @@
 			&lt;/body&gt; \
 			&lt;/html&gt;&quot;
 
-	class HelloWorld(object):
+	class SE(object):
 		def index(self):
 			return form
 
@@ -180,13 +180,82 @@
 		index.exposed = True
 		q.exposed = True
 
-	cherrypy.quickstart(HelloWorld())
+	cherrypy.quickstart(SE())
 	|
 	</span>
 
 	So the code above (in case you can't understand it by now) grabs the query results, and then (depending on the results) either wraps them up in an unordered list of links or else returns "No results found."
 
 	Again, if you copy all of this into your `web.py` file and run it from the command line with `python web.py`, you'll be able to access the working search engine from <a href="http://localhost:8080/" target="_blank">http://localhost:8080/</a>.
+
+	There's only one other quick feature that I'd like to add. You may have noticed near the top of `web.py` the call to `crawl("index.html")`. This crawl will be very quick because the `index.html` file lives on our file system, and there's only four very small pages to crawl. But suppose that we had called `crawl("http://www.wikipedia.org/")`, or something like that. In such a case, our crawler would take a _very_ long time to complete -- and our web server can't launch until it's done. This is because, as you probably recall, the Python interpreter runs things one line at a time. If one line takes a long time to execute, well too bad for us; we simply have to wait for it to finish. Or do we? In fact, the computer is capable of doing many things at once, as is obviously illustrated by the fact that we can run a virus scan while we play a game and type a document and listen to music. How does the computer do this? Well, you'll recall that our code itself is passive; it doesn't do anything until the computer executes it. When the computer does execute it, the execution is called a ~process~. All computers have a ~processor~, which is the actual "organ" inside of the computer that executes the code. Some computers even have multiple processors. In such a case, the computer is able to launch multiple simultaneous processes. But even if the computer only has one processor, then most operating systems are smart enough to be able to handle multiple "simultaneous" processes. (I put "simultaneous" in quotes because it's not quite true that they really occur at the same time; often, what happens is that the processor goes through the list of active processes and gives each of them a little bit of its attention until all they're all finished executing.) In addition to running multiple processes simultaneously, it's also possible for each process to have multiple simultaneous ~threads~ (paths) of execution. Each process is made up of threads. From a hierarchical standpoint, processes don't share memory spaces, whereas threads do because they are the children of processes.
+
+	When we call for `python web.py`, we are launching a new Python process. Within this process, there is currently only one thread of execution. But what we'd like to do, presumably, is ask our `crawl()` function to operate in a separate thread. That way, our web server can go ahead and launch, and we don't have ot wait for the `crawl()` function to finish. Of course, this also means that people could potentially begin querying for results before the crawler has finished gathering all of its data, but this outcome is probably preferable to forcing users to wait to query until the crawler is finished doing its job.
+
+	So how do we add this magical multi-threading support to our web app? We need to import the appropriate library, called `thread`. Then, we need to call it. Instead of this:
+
+	<span class="python">
+	|
+	search.crawl("index.html")
+	|
+	</span>
+
+	We now have:
+
+	<span class="python">
+	|
+	import thread
+
+	thread.start_new_thread(search.crawl, ("index.html",))
+	|
+	</span>
+
+	The syntax for the new method call is `thread.start_new_thread(function, (arg, arg, arg, ...))`. The `function` is followed by a list of arguments. This list must be in the form of a ~tuple~, which is a special kind of immutable Python list. Arrays are always enclosed in square brackets, but tuples are always enclosed in parentheses. But there's one weird thing to remember about tuples: if they contain only one element, then that element must be followed by a comma. If you don't follow the single element by a comma, then Python will think that you're merely wrapping an expression in parentheses for the sake of clarity. That's why `"index.html"` is followed by a comma in the example above.
+
+	Here's the finished product.
+
+	<span class="python">
+	|
+	import cherrypy
+	import search
+	import thread
+
+	thread.start_new_thread(search.crawl, (&quot;index.html&quot;,))
+
+	form = &quot;&lt;html&gt; \
+		&lt;body&gt; \
+			&lt;h3&gt;Search Engine&lt;/h3&gt; \
+			&lt;form action=&#39;q&#39; method=&#39;get&#39;&gt; \
+				&lt;input type=&#39;text&#39; name=&#39;search_string&#39;&gt; \
+				&lt;input type=&#39;submit&#39; value=&#39;Submit&#39;&gt; \
+			&lt;/form&gt; \
+		&lt;/body&gt; \
+		&lt;/html&gt;&quot;
+
+	class SE(object):
+		def index(self):
+			return form
+
+		def q(self, search_string):
+			urls = search.query(search_string)
+			results = &quot;&lt;html&gt;&lt;body&gt;&quot;
+			if urls != [&quot;No results found.&quot;]:
+				results += &quot;&lt;ul&gt;&quot;
+				for url in urls:
+					results += &quot;&lt;li&gt;&lt;a href=&#39;&quot;  + url[0] + &quot;&#39;&gt;&quot; + url[0] + &quot;&lt;/a&gt;&lt;/li&gt;&quot;
+				results += &quot;&lt;/ul&gt;&lt;/body&gt;&lt;/html&gt;&quot;
+			else:
+				results += &quot;No results found.&quot;
+				results += &quot;&lt;/body&gt;&lt;/html&gt;&quot;
+
+			return results
+
+		index.exposed = True
+		q.exposed = True
+
+	cherrypy.quickstart(SE())
+	|
+	</span>
 
 	Well, this lesson has gone on for pretty long as it is, so I'll probably wrap it up here. Obviously, our product isn't very aesthetically pleasing yet, but those are just details. For now, we've created the core of our web app!
 </body>
