@@ -2,7 +2,7 @@ import cherrypy
 import search
 import thread
 
-thread.start_new_thread(search.crawl, ("http://premiergranbury.com/",))
+thread.start_new_thread(search.crawl, ("http://en.wikipedia.org/wiki/George_Washington",))
 
 form = "<html> \
 	<body> \

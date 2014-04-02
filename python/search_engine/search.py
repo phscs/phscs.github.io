@@ -1,6 +1,7 @@
 import urllib
 import string
 import pickledb
+import urlparse
 
 index = pickledb.load("index.db", False)
 popularity_index = pickledb.load("popularity_index.db", False)
@@ -9,6 +10,7 @@ index.deldb()
 popularity_index.deldb()
 
 def get_links(source):
+	print "getting links..."
 	links = []
 	link_temp = ""
 	collecting_characters = False
@@ -27,7 +29,8 @@ def get_links(source):
 
 	return links
 
-def get_keywords(source):
+def get_keywords(source, url):
+	print "getting keywords..."
 	collecting_characters = False
 	collected_characters = ""
 
@@ -57,6 +60,7 @@ def get_keywords(source):
 
 def add_to_index(url, keywords):
 	for keyword in keywords:
+		print "adding '" + keyword + "', " + url + " to index"
 		urls = index.get(keyword)
 
 		if urls == None:
@@ -65,27 +69,48 @@ def add_to_index(url, keywords):
 			urls.append([url, 0])
 			index.set(keyword, urls)
 
-		index.dump()
+	index.dump()
 
 def crawl(seed_page_url):
 	urls_to_crawl = [seed_page_url]
 	urls_already_crawled = []
 	crawls = 0
 
+	parsed_uri = urlparse.urlparse(seed_page_url)
+	last_domain = '{uri.scheme}://{uri.netloc}'.format(uri=parsed_uri)
+
 	while len(urls_to_crawl) > 0 and crawls < 50:
 		try:
-			url = urls_to_crawl[0]
+			url = urls_to_crawl[0]				
+
+			print "crawling " + url
 			source = urllib.urlopen(url).read()
 
-			keywords = get_keywords(source)
+			keywords = get_keywords(source, url)
 			add_to_index(url, keywords)
+
+			uprank_relevance(keywords, source, url)
 
 			links = get_links(source)
 
 			for link in links:
-				uprank_popularity(link)
 				if link != url and link not in urls_already_crawled and link not in urls_to_crawl:
+
+					parsed_uri = urlparse.urlparse(link)
+					current_domain = '{uri.scheme}://{uri.netloc}/'.format(uri=parsed_uri)
+
+					if link[0:2] == "//":
+						link = "http:" + link
+					elif current_domain[0:4] != "http":
+						link = last_domain[:len(last_domain)] + link
+					elif current_domain != last_domain:
+						last_domain = current_domain
+
+					uprank_popularity(link)
 					urls_to_crawl.append(link)
+
+			popularity_index.dump()
+
 		except:
 			pass
 
@@ -94,6 +119,7 @@ def crawl(seed_page_url):
 		crawls += 1
 
 def uprank_popularity(url):
+	print "upranking popularity of " + url
 	popularity = popularity_index.get(url)
 
 	if popularity == None:
@@ -102,31 +128,29 @@ def uprank_popularity(url):
 		popularity += 1
 
 	popularity_index.set(url, popularity)
-	popularity_index.dump()
 
-def uprank_relevance(keyword, url):
-	urls = index.get(keyword)
+def uprank_relevance(keywords, source, url):
+	for keyword in keywords:
+		urls = index.get(keyword)
+		if urls != None:
+			for entry in urls:
+				if entry[0] == url:
+					print "upranking relevance of " + entry[0] + " for " + keyword
+					entry[1] = source.count(keyword)
+		index.set(keyword, urls)
 
-	for entry in urls:
-		if url == entry[0]:
-			entry[1] += 1
-
-	index.set(keyword, urls)
 	index.dump()
 
 def query(search_string):
-	# sanitize the input
+	print "querying for '" + search_string + "'"
 	sanitized_search_string = ""
 
 	for character in search_string:
 		if character not in string.punctuation:
 			sanitized_search_string += character.lower()
 
-	# break input along spaces
 	keywords = sanitized_search_string.split(" ")
 
-	# for each keyword, get its corresponding URLs from the index
-	# now modified to return only intersections
 	results = []
 
 	for keyword in keywords:
@@ -147,27 +171,30 @@ def query(search_string):
 				urls.append(url)
 
 	if len(urls) != 0:
-		# sort
 		sorted_urls = sort(urls)
 
-		# return
 		return sorted_urls
 
 	else:
 		return ["No results found."]
 
 def sort(urls):
-	# we'll start by calculating the overall scores for each URL
+	print "sorting urls..."
 	relevance_weight = 1
 	popularity_weight = 1
 
 	scored_urls = []
 
 	for url in urls:
-		score = url[1] + popularity_index.get(url[0])
+		score = 0
+
+		try:
+			score = url[1] + popularity_index.get(url[0])
+		except:
+			pass
+
 		scored_urls.append([url[0], score])
 
-	# then we'll actually sort the URLs
 	sorted_urls = [scored_urls[0]]
 
 	for url in scored_urls:
