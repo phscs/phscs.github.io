@@ -8,7 +8,9 @@ form = "<html> \
 	<body> \
 		<h3>Search Engine</h3> \
 		<form action='q' method='get'> \
-			<input type='text' name='search_string'> \
+			Search: <input type='text' name='search_string'> \
+			rel: <input type='number' name='r'> \
+			pop: <input type='number' name='p'> \
 			<input type='submit' value='Submit'> \
 		</form> \
 	</body> \
@@ -18,8 +20,10 @@ class SE(object):
 	def index(self):
 		return form
 
-	def q(self, search_string):
-		urls = search.query(search_string)
+	def q(self, search_string, r, p):
+		r = int(r)
+		p = int(p)
+		urls = search.query(search_string, r, p)
 		results = "<html><body>"
 		if urls != ["No results found."]:
 			results += "<ul>"

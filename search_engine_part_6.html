@@ -158,23 +158,27 @@
 	<span class="python">
 	|
 	def sort(urls):
-		# we'll start by calculating the overall scores for each URL
 		relevance_weight = 1
 		popularity_weight = 1
 
 		scored_urls = []
 
 		for url in urls:
-			score = url[1] + popularity_index[url[0]]
+			score = 0
+
+			try:
+				score = url[1] + popularity_index.get(url[0])
+			except:
+				pass
+
 			scored_urls.append([url[0], score])
 
-		# then we'll actually sort the URLs
 		sorted_urls = [scored_urls[0]]
 
 		for url in scored_urls:
-			for i in range(0, len(scored_urls)):
-				scored_url = scored_urls[i]
-				if url[1] > scored_url[1] and url not in sorted_urls:
+			for i in range(0, len(sorted_urls)):
+				sorted_url = sorted_urls[i]
+				if url[1] > sorted_url[1] and url not in sorted_urls:
 					sorted_urls.insert(i, url)
 
 			if url not in sorted_urls:
@@ -255,23 +259,27 @@
 			return ["No results found."]
 	
 	def sort(urls):
-		# we'll start by calculating the overall scores for each URL
 		relevance_weight = 1
 		popularity_weight = 1
 
 		scored_urls = []
 
 		for url in urls:
-			score = url[1] + popularity_index[url[0]]
+			score = 0
+
+			try:
+				score = url[1] + popularity_index.get(url[0])
+			except:
+				pass
+
 			scored_urls.append([url[0], score])
 
-		# then we'll actually sort the URLs
 		sorted_urls = [scored_urls[0]]
 
 		for url in scored_urls:
-			for i in range(0, len(scored_urls)):
-				scored_url = scored_urls[i]
-				if url[1] > scored_url[1] and url not in sorted_urls:
+			for i in range(0, len(sorted_urls)):
+				sorted_url = sorted_urls[i]
+				if url[1] > sorted_url[1] and url not in sorted_urls:
 					sorted_urls.insert(i, url)
 
 			if url not in sorted_urls:
