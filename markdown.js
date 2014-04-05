@@ -46,6 +46,7 @@ function markdown(){
 	insideItalics = false;
 	insideVocab = false;
 	insideBold = false;
+	betweenLinkTags = false;
 	tabsSinceNewLine = 0;
 	newLinesSinceEnteringBlockCode = 0;
 
@@ -91,6 +92,13 @@ function markdown(){
 
 		else {
 			// watch out for opening pipes, inline code, italics, vocab, bold, newlines, and returns
+
+			if (text.slice(i, i+2) == "<a"){
+				betweenLinkTags = true;
+			} else if (text.slice(i, i+3) == "</a"){
+				betweenLinkTags = false;
+			};
+
 			if (character == "`"){
 				insideInlineCode = !insideInlineCode;
 
@@ -101,7 +109,7 @@ function markdown(){
 				};
 			}
 
-			else if (character == "_" && !insideHTMLTag && !insideInlineCode && !insideBlockCode){
+			else if (character == "_" && !insideHTMLTag && !insideInlineCode && !insideBlockCode && betweenLinkTags){
 				insideItalics = !insideItalics;
 
 				if (insideItalics){
