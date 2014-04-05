@@ -27,7 +27,7 @@
 	|
 	</span>
 
-	If we query for a keyword using this function, then we'll receive in return an array of arrays, like this: `[[URL, relevance], [URL, relevance], [URL, relevance], ...]]`. And although this function is sufficient, there are three big pitfalls to avoid. 
+	If we query for a keyword using this function, then we'll receive in return an array of arrays, like this: `[[URL, relevance], [URL, relevance], [URL, relevance], ...]]`. And although this function is sufficient, there are three big pitfalls to avoid.
 
 	First, this function assumes that the user will enter "clean" text, text without capitalization and punctuation. Since the keywords in our index contain neither capitalization or punctuation, then a query that contains either capital letters or punctuation marks will fail to return results. To handle this problem, we'll have to ~sanitize~ or ~validate~ (i.e., change the input to be clean/sane and valid) the end user's input before we can ask whether or not it's in our index. It's also important to remember that Python's strings are immutable, which means that we'll have to create a new string to contain the sanitized, validated text.
 
@@ -56,7 +56,7 @@
 		for keyword in keywords:
 			if keyword in index:
 				entries = index[keyword]
-		
+
 				for entry in entries:
 					if entry not in urls:
 						urls.append(entry)
@@ -75,12 +75,12 @@
 			return ["No results found."]
 	|
 	</span>
-	
+
 	I tested this function out, and it works well so far. But before we go on to write our sort functions, I want to make one brief detour and discuss our process of combining the results for multiple keywords. Imagine that a user queries for "apple pie." Imagine that "apple" is associated with URLs 1, 2, and 3, and that "pie" is associated with URLs 2, 3, and 4. What URLs will our function currently return when a user queries for "apple pie"? It should return all four links (without duplicates): [1, 2, 3, 4]. But maybe the user was hoping for only the pages that contain _both_ words (specifically, he was hoping for pages 2 and 3). What should we do? Is it better to return a page if it contains _either_ "apple" _or_ "pie," or is it better to return the page only if it contains _both_ "apple" _and_ "pie"?
 
 	The ideas that we're discussing come from a part of mathematics called ~set theory~ (the theory of sets). The results returned from "apple" are one set, and the results returned from "pie" are a different set, and the question with which we're wrestling is how best to deal with the two sets. Should we return the ~union~ (a combination of all of the elements of the two sets) of the sets, or should we return the ~intersection~ (only those elements which are common to both sets) of the sets? Clearly, an intersection will almost always be a smaller list than a union; or, said another way, an intersection will probably be more specific than a union. And there are pitfalls in both directions. Imagine that we only returned unions. In such a case, we could imagine that someone only really wanted pages that talked about _both_ "apple" _and_ "pie," but we're returning to them (in addition to those pages) pages that could potentially contain "apple" but not "pie," or "pie" but not "apple." In such a case, users would have to dig through an unnecessarily large list of results to find their desired result. Conversely, we could imagine that we only returned intersections. Of course, it may be the case that we have some pages in our index for "apple" and some for "pie", but that none of those pages are in both lists (i.e., there are no pages that have _both_ "apple" _and_ "pie"). In such a case, our engine would return no results at all, which is a great disappointment to the end user.
 
-	The best thing to consider, probably, is what the user himself intends. Could it be the case that a user would query for "apple pie" but in his mind think, _Oh, I could be happy with results that have "apple" but not "pie," or "pie" but not "apple"_? To me, at least, this seems to be pretty unlikely. Most users probably don't want results that have _either_ "apple" _or_ "pie"; they want results that contain _both_ words! But, of course, if we only return intersections, then we run the risk of returning too few (or none) results to the user. 
+	The best thing to consider, probably, is what the user himself intends. Could it be the case that a user would query for "apple pie" but in his mind think, _Oh, I could be happy with results that have "apple" but not "pie," or "pie" but not "apple"_? To me, at least, this seems to be pretty unlikely. Most users probably don't want results that have _either_ "apple" _or_ "pie"; they want results that contain _both_ words! But, of course, if we only return intersections, then we run the risk of returning too few (or none) results to the user.
 
 	Personally, I feel that Google handles this problem well. They return intersections and unions at the same time, but they put the intersections first. The goal, presumably, is that the user should get the most specific results first, followed by the less specific results (in case the first results were not desirable). You can try it for yourself: if you search Google for "apple pie" (without quotation marks) then your first results will probably contain pages on which "apple" and "pie" both appear. These results are followed by pages which contain either "apple" or "pie," but not both.
 
@@ -254,10 +254,10 @@
 
 			# return
 			return sorted_urls
-		
+
 		else:
 			return ["No results found."]
-	
+
 	def sort(urls):
 		relevance_weight = 1
 		popularity_weight = 1
@@ -288,5 +288,7 @@
 		return sorted_urls
 	|
 	</span>
+
+	The complete `search.py` file for this lesson can be downloaded here: <a href="https://github.com/phscs/search_engine/archive/0.6.1.zip">https://github.com/phscs/search_engine/archive/0.6.1.zip</a>.
 </body>
 </html>
