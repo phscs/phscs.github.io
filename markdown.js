@@ -93,9 +93,10 @@ function markdown(){
 		else {
 			// watch out for opening pipes, inline code, italics, vocab, bold, newlines, and returns
 
-			if (text.slice(i, i+2) == "<a"){
+			if (text.slice(i, i+2).join("") == "<a"){
 				betweenLinkTags = true;
-			} else if (text.slice(i, i+3) == "</a"){
+				console.log("link")
+			} else if (text.slice(i, i+3).join("") == "</a"){
 				betweenLinkTags = false;
 			};
 
@@ -109,7 +110,7 @@ function markdown(){
 				};
 			}
 
-			else if (character == "_" && !insideHTMLTag && !insideInlineCode && !insideBlockCode && betweenLinkTags){
+			else if (character == "_" && !insideHTMLTag && !insideInlineCode && !insideBlockCode && !betweenLinkTags){
 				insideItalics = !insideItalics;
 
 				if (insideItalics){
